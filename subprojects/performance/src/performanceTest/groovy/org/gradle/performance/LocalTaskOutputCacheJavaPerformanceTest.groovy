@@ -42,7 +42,7 @@ class LocalTaskOutputCacheJavaPerformanceTest extends AbstractCrossVersionPerfor
 
         where:
         testProject      | tasks
-        'bigOldJava'     | ['assemble']
-        'largeWithJUnit' | ['build']
+        'bigOldJava'     | ['clean', 'assemble']
+        'largeWithJUnit' | ['clean', 'build']
     }
 }
