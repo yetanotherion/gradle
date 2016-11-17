@@ -30,7 +30,7 @@ public class AARFilterLocalIntegrationTest extends AbstractAARFilterAndTransform
         dependency "'org.gradle:ext-android-lib:1.0'"
 
         then:
-        artifacts('processClasses') == [
+        artifacts('processClassFolders') == [
             '/java-lib/build/classes/main',
             '/android-lib/build/classes/main'
         ]
