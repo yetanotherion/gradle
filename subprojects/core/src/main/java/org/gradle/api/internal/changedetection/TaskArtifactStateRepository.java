@@ -16,7 +16,10 @@
 package org.gradle.api.internal.changedetection;
 
 import org.gradle.api.internal.TaskInternal;
+import org.gradle.api.internal.changedetection.state.TaskExecution;
 
 public interface TaskArtifactStateRepository {
     TaskArtifactState getStateFor(TaskInternal task);
+
+    TaskExecution currentExecution(TaskInternal task);
 }

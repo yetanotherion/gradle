@@ -58,6 +58,11 @@ public class ShortCircuitTaskArtifactStateRepository implements TaskArtifactStat
         return state;
     }
 
+    @Override
+    public TaskExecution currentExecution(TaskInternal task) {
+        return repository.currentExecution(task);
+    }
+
     private class RerunTaskArtifactState implements TaskArtifactState {
         private final TaskArtifactState delegate;
         private final TaskInternal task;
@@ -92,11 +97,6 @@ public class ShortCircuitTaskArtifactStateRepository implements TaskArtifactStat
 
         public TaskExecutionHistory getExecutionHistory() {
             return delegate.getExecutionHistory();
-        }
-
-        @Override
-        public TaskExecution currentExecution(TaskInternal task) {
-            return null;
         }
 
         public void beforeTask() {

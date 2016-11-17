@@ -18,9 +18,7 @@ package org.gradle.api.internal.changedetection.changes;
 
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.internal.TaskExecutionHistory;
-import org.gradle.api.internal.TaskInternal;
 import org.gradle.api.internal.changedetection.TaskArtifactState;
-import org.gradle.api.internal.changedetection.state.TaskExecution;
 import org.gradle.api.internal.tasks.cache.TaskCacheKey;
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
 
@@ -50,11 +48,6 @@ class NoHistoryArtifactState implements TaskArtifactState, TaskExecutionHistory 
 
     public TaskExecutionHistory getExecutionHistory() {
         return this;
-    }
-
-    @Override
-    public TaskExecution currentExecution(TaskInternal task) {
-        return null;
     }
 
     public void beforeTask() {
