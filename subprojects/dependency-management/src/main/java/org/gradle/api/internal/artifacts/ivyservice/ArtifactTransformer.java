@@ -17,11 +17,17 @@
 package org.gradle.api.internal.artifacts.ivyservice;
 
 import com.google.common.io.Files;
+import org.gradle.api.Attribute;
+import org.gradle.api.AttributeContainer;
 import org.gradle.api.Buildable;
 import org.gradle.api.Nullable;
 import org.gradle.api.Transformer;
 import org.gradle.api.artifacts.ResolvedArtifact;
+import org.gradle.api.artifacts.attributes.ArtifactExtension;
+import org.gradle.api.artifacts.attributes.ArtifactName;
+import org.gradle.api.artifacts.attributes.ArtifactType;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
+import org.gradle.api.internal.DefaultAttributeContainer;
 import org.gradle.api.internal.artifacts.DefaultResolvedArtifact;
 import org.gradle.api.internal.artifacts.configurations.ResolutionStrategyInternal;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.artifact.ArtifactVisitor;
@@ -104,6 +110,7 @@ public class ArtifactTransformer {
                 for (File file : files) {
                     String fileFormat = Files.getFileExtension(file.getName());
                     if (format.equals(fileFormat)) {
+                    AttributeContainer attributeContainer = defaultFileAttributes(file);
                         result.add(file);
                         continue;
                     }
@@ -123,6 +130,17 @@ public class ArtifactTransformer {
                 if (!result.isEmpty()) {
                     visitor.visitFiles(componentIdentifier, result);
                 }
+            }
+
+            private AttributeContainer defaultFileAttributes(File file) {
+                DefaultAttributeContainer attributes = new DefaultAttributeContainer();
+                attributes.attribute(Attribute.of(ArtifactName.class), new ArtifactName(file.getName()));
+                String fileExtension = Files.getFileExtension(file.getName());
+                if (!"".equals(fileExtension)) {
+                    attributes.attribute(Attribute.of(ArtifactType.class), new ArtifactType(fileExtension));
+                    attributes.attribute(Attribute.of(ArtifactExtension.class), new ArtifactExtension(fileExtension));
+                }
+                return attributes;
             }
         };
     }

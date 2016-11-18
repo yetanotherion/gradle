@@ -17,9 +17,14 @@
 package org.gradle.internal.component.model;
 
 import com.google.common.base.Objects;
+import org.gradle.api.Attribute;
 import org.gradle.api.AttributeContainer;
 import org.gradle.api.Nullable;
 import org.gradle.api.artifacts.PublishArtifact;
+import org.gradle.api.artifacts.attributes.ArtifactClassifier;
+import org.gradle.api.artifacts.attributes.ArtifactExtension;
+import org.gradle.api.artifacts.attributes.ArtifactName;
+import org.gradle.api.artifacts.attributes.ArtifactType;
 import org.gradle.api.internal.DefaultAttributeContainer;
 import org.gradle.util.GUtil;
 
@@ -55,6 +60,19 @@ public class DefaultIvyArtifactName implements IvyArtifactName {
         this.extension = extension;
         this.classifier = classifier;
         this.attributes = attributes == null ? new DefaultAttributeContainer() : attributes;
+
+        attachDefaultAttributes();
+    }
+
+    private void attachDefaultAttributes() {
+        attributes.attribute(Attribute.of(ArtifactName.class), new ArtifactName(name));
+        attributes.attribute(Attribute.of(ArtifactType.class), new ArtifactType(type));
+        if (extension != null) {
+            attributes.attribute(Attribute.of(ArtifactExtension.class), new ArtifactExtension(extension));
+        }
+        if (classifier != null) {
+            attributes.attribute(Attribute.of(ArtifactClassifier.class), new ArtifactClassifier(classifier));
+        }
     }
 
     @Override
