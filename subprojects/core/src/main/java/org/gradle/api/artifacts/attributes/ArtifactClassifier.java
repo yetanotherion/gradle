@@ -16,10 +16,13 @@
 
 package org.gradle.api.artifacts.attributes;
 
+import org.gradle.api.Attribute;
 import org.gradle.api.Incubating;
 
 @Incubating
 public class ArtifactClassifier extends ArtifactDefaultAttribute {
+
+    public static final Attribute<ArtifactClassifier> ATTRIBUTE = Attribute.of(ArtifactClassifier.class);
 
     public ArtifactClassifier(String value) {
         super(value);

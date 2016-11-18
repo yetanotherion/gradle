@@ -65,13 +65,13 @@ public class DefaultIvyArtifactName implements IvyArtifactName {
     }
 
     private void attachDefaultAttributes() {
-        attributes.attribute(Attribute.of(ArtifactName.class), new ArtifactName(name));
-        attributes.attribute(Attribute.of(ArtifactType.class), new ArtifactType(type));
+        attributes.attribute(ArtifactName.ATTRIBUTE, new ArtifactName(name));
+        attributes.attribute(ArtifactType.ATTRIBUTE, new ArtifactType(type));
         if (extension != null) {
-            attributes.attribute(Attribute.of(ArtifactExtension.class), new ArtifactExtension(extension));
+            attributes.attribute(ArtifactExtension.ATTRIBUTE, new ArtifactExtension(extension));
         }
         if (classifier != null) {
-            attributes.attribute(Attribute.of(ArtifactClassifier.class), new ArtifactClassifier(classifier));
+            attributes.attribute(ArtifactClassifier.ATTRIBUTE, new ArtifactClassifier(classifier));
         }
     }
 

@@ -17,6 +17,7 @@
 package org.gradle.api.internal.artifacts.ivyservice.resolutionstrategy;
 
 import org.gradle.api.Action;
+import org.gradle.api.AttributeContainer;
 import org.gradle.api.Transformer;
 import org.gradle.api.artifacts.ComponentSelection;
 import org.gradle.api.artifacts.ComponentSelectionRules;
@@ -28,6 +29,7 @@ import org.gradle.api.artifacts.ResolutionStrategy;
 import org.gradle.api.artifacts.cache.ResolutionRules;
 import org.gradle.api.artifacts.transform.ArtifactTransform;
 import org.gradle.api.artifacts.transform.internal.ArtifactTransforms;
+import org.gradle.api.internal.DefaultAttributeContainer;
 import org.gradle.api.internal.artifacts.ComponentSelectionRulesInternal;
 import org.gradle.api.internal.artifacts.component.ComponentIdentifierFactory;
 import org.gradle.api.internal.artifacts.configurations.ConflictResolution;
@@ -61,6 +63,7 @@ public class DefaultResolutionStrategy implements ResolutionStrategyInternal {
     private final DependencySubstitutionsInternal dependencySubstitutions;
     private final DependencySubstitutionRules globalDependencySubstitutionRules;
     private final ArtifactTransforms transforms = new ArtifactTransforms();
+    private final AttributeContainer artifactsQuery = new DefaultAttributeContainer();
     private MutationValidator mutationValidator = MutationValidator.IGNORE;
 
     private boolean assumeFluidDependencies;
@@ -88,8 +91,24 @@ public class DefaultResolutionStrategy implements ResolutionStrategyInternal {
     }
 
     @Override
-    public Transformer<File, File> getTransform(String from, String to) {
+    public AttributeContainer getArtifactsQuery() {
+        return artifactsQuery;
+    }
+
+    @Override
+    public ResolutionStrategy artifactsQuery(Action<? super AttributeContainer> action) {
+        action.execute(artifactsQuery);
+        return this;
+    }
+
+    @Override
+    public Transformer<File, File> getTransform(AttributeContainer from, AttributeContainer to) {
         return transforms.getTransform(from, to);
+    }
+
+    @Override
+    public boolean matchArtifactsAttributes(AttributeContainer requiredAttributes, AttributeContainer providedAttributes) {
+        return transforms.matchArtifactsAttributes(requiredAttributes, providedAttributes);
     }
 
     @Override

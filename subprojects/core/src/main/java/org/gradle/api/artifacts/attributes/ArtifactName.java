@@ -16,10 +16,13 @@
 
 package org.gradle.api.artifacts.attributes;
 
+import org.gradle.api.Attribute;
 import org.gradle.api.Incubating;
 
 @Incubating
 public class ArtifactName extends ArtifactDefaultAttribute {
+
+    public static final Attribute<ArtifactName> ATTRIBUTE = Attribute.of(ArtifactName.class);
 
     public ArtifactName(String value) {
         super(value);

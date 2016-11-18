@@ -16,6 +16,7 @@
 package org.gradle.api.internal.artifacts.configurations;
 
 import org.gradle.api.Action;
+import org.gradle.api.AttributeContainer;
 import org.gradle.api.Transformer;
 import org.gradle.api.artifacts.DependencySubstitution;
 import org.gradle.api.artifacts.ResolutionStrategy;
@@ -81,10 +82,14 @@ public interface ResolutionStrategyInternal extends ResolutionStrategy {
      */
     void setMutationValidator(MutationValidator action);
 
+    AttributeContainer getArtifactsQuery();
+
     /**
      * @param from format to transform from
      * @param to format to transform to
      * @return a transform that can transform between the two formats, null if no fitting transform is registered
      */
-    Transformer<File, File> getTransform(String from, String to);
+    Transformer<File, File> getTransform(AttributeContainer from, AttributeContainer to);
+
+    boolean matchArtifactsAttributes(AttributeContainer requiredAttributes, AttributeContainer providedAttributes);
 }

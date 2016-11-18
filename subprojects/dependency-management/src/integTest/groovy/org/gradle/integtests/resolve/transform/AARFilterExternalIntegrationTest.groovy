@@ -30,7 +30,7 @@ public class AARFilterExternalIntegrationTest extends AbstractAARFilterAndTransf
         dependency "'org.gradle:ext-android-lib:1.0'"
 
         then:
-        artifacts('processJar') == [
+        artifacts('processJarFiles') == [
             '/maven-repo/org/gradle/ext-java-lib/1.0/ext-java-lib-1.0.jar'
         ]
     }

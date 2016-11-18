@@ -17,6 +17,7 @@ package org.gradle.api.artifacts;
 
 import groovy.lang.Closure;
 import org.gradle.api.Action;
+import org.gradle.api.AttributeContainer;
 import org.gradle.api.Incubating;
 import org.gradle.api.artifacts.result.ResolutionResult;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
@@ -65,7 +66,7 @@ public interface ResolvableDependencies {
      * @since 3.3
      */
     @Incubating
-    FileCollection getFiles(String format);
+    FileCollection getFiles(AttributeContainer attributes);
 
     /**
      * Returns the set of dependencies which will be resolved.

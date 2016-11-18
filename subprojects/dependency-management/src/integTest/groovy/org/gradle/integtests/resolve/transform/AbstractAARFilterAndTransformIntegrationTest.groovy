@@ -1,4 +1,4 @@
-/*
+    /*
  * Copyright 2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -61,6 +61,19 @@ abstract public class AbstractAARFilterAndTransformIntegrationTest extends Abstr
         """.stripIndent()
 
         buildFile << """
+            enum FileFormat {
+                JAR,
+                AAR,
+                CLASS_FOLDER,
+                MANIFEST
+            }
+
+            enum ProcessingAspect {
+                JVM_CLASSPATH,
+                DEX,
+                MANIFEST_MERGE
+            }
+
             ${javaLibWithClassFolderArtifact('java-lib')}
             ${mockedAndroidLib('android-lib')}
             ${mockedAndroidApp('android-app')}
@@ -103,7 +116,7 @@ abstract public class AbstractAARFilterAndTransformIntegrationTest extends Abstr
 
             artifacts {
                 compileClassesAndResources(classes.destinationDir) {
-                    ${formatInLocalArtifact('classes')}
+                    ${defineLocalArtifactAttribute('FileFormat', 'CLASS_FOLDER')}
                     builtBy classes
                 }
 
@@ -160,11 +173,11 @@ abstract public class AbstractAARFilterAndTransformIntegrationTest extends Abstr
 
             artifacts {
                 compileClassesAndResources(classes.destinationDir) {
-                    ${formatInLocalArtifact('classes')}
+                    ${defineLocalArtifactAttribute('FileFormat', 'CLASS_FOLDER')}
                     builtBy classes
                 }
                 compileClassesAndResources(file('aar-image/AndroidManifest.xml')) {
-                    ${formatInLocalArtifact('android-manifest')}
+                    ${defineLocalArtifactAttribute('ProcessingAspect', 'MANIFEST_MERGE')}
                 }
 
                 runtime jar
@@ -189,8 +202,9 @@ abstract public class AbstractAARFilterAndTransformIntegrationTest extends Abstr
                 // configurations with filtering/transformation over 'compile'
                 processClasspath {
                     extendsFrom(compileClassesAndResources)
-                    ${formatInConfiguration('classpath')} // 'classes' or 'jar'
                     resolutionStrategy {
+                        ${defineArtifactQuery('ProcessingAspect', 'JVM_CLASSPATH')} // 'classes' or 'jar'
+
                         ${registerTransform('AarExtractor')}
                         ${registerTransform('JarTransform')}
                         ${registerTransform('ClassesFolderClasspathTransform')}
@@ -198,25 +212,41 @@ abstract public class AbstractAARFilterAndTransformIntegrationTest extends Abstr
                 }
                 processClasses {
                     extendsFrom(compileClassesAndResources)
-                    ${formatInConfiguration('classes')}
                     resolutionStrategy {
+                        ${defineArtifactQuery('ProcessingAspect', 'DEX')}
+
                         ${registerTransform('AarExtractor')}
                         ${registerTransform('JarTransform')}
+                        ${registerTransform('ClassesFolderClasspathTransform')}
                     }
                 }
                 processJar {
                     extendsFrom(compileClassesAndResources)
-                    ${formatInConfiguration('jar')}
                     resolutionStrategy {
+                        ${defineArtifactQuery('FileFormat', 'JAR')}
+
                         ${registerTransform('AarExtractor')}
+                        ${registerTransform('JarTransform')}
+                        ${registerTransform('ClassesFolderClasspathTransform')}
                     }
                 }
                 processManifests {
                     extendsFrom(compileClassesAndResources)
-                    ${formatInConfiguration('android-manifest')}
                     resolutionStrategy {
+                        ${defineArtifactQuery('ProcessingAspect', 'MANIFEST_MERGE')}
+
                         ${registerTransform('AarExtractor')}
                     }
+                }
+
+                processClassFolders {
+                    extendsFrom(compileClassesAndResources)
+                    resolutionStrategy { artifactsQuery { attribute(Attribute.of(ArtifactName), new ArtifactName('main')) } }
+                }
+                processJarFiles {
+                    extendsFrom(compileClassesAndResources)
+
+                    resolutionStrategy { artifactsQuery { attribute(Attribute.of(ArtifactExtension), new ArtifactExtension('jar')) } }
                 }
             }
 
@@ -239,34 +269,23 @@ abstract public class AbstractAARFilterAndTransformIntegrationTest extends Abstr
             return ""
         }
         """
-        @TransformInput(format = 'aar')
         class AarExtractor extends ArtifactTransform {
             private Project files
 
             private File explodedAar
             private File explodedJar
 
-            @TransformOutput(format = 'jar')
-            File getClassesJar() {
-                new File(explodedAar, "classes.jar")
+            void configure(AttributeContainer from, AttributeTransformTargetRegistry targetRegistry) {
+                from.attribute(Attribute.of(ArtifactExtension.class), new ArtifactExtension("aar"))
+
+                targetRegistry.newTarget().attribute(Attribute.of(FileFormat.class), FileFormat.JAR)
+                targetRegistry.newTarget().attribute(Attribute.of(FileFormat.class), FileFormat.CLASS_FOLDER)
+                targetRegistry.newTarget().attribute(Attribute.of(ProcessingAspect.class), ProcessingAspect.JVM_CLASSPATH)
+                targetRegistry.newTarget().attribute(Attribute.of(ProcessingAspect.class), ProcessingAspect.DEX)
+                targetRegistry.newTarget().attribute(Attribute.of(ProcessingAspect.class), ProcessingAspect.MANIFEST_MERGE)
             }
 
-            @TransformOutput(format = 'classpath')
-            File getClasspathElement() {
-                getClassesJar()
-            }
-
-            @TransformOutput(format = 'classes')
-            File getClassesFolder() {
-                explodedJar
-            }
-
-            @TransformOutput(format = 'android-manifest')
-            File getManifest() {
-                new File(explodedAar, "AndroidManifest.xml")
-            }
-
-            void transform(File input) {
+            File transform(File input, AttributeContainer target) {
                 assert input.name.endsWith('.aar')
 
                 explodedAar = new File(outputDirectory, input.name + '/explodedAar')
@@ -284,6 +303,24 @@ abstract public class AbstractAARFilterAndTransformIntegrationTest extends Abstr
                         into explodedJar
                     }
                 }
+
+                if (target.getAttribute(Attribute.of(FileFormat.class)) == FileFormat.JAR) {
+                    return new File(explodedAar, "classes.jar");
+                }
+                if (target.getAttribute(Attribute.of(ProcessingAspect.class)) == ProcessingAspect.JVM_CLASSPATH) {
+                    return new File(explodedAar, "classes.jar");
+                }
+
+                if (target.getAttribute(Attribute.of(FileFormat.class)) == FileFormat.CLASS_FOLDER) {
+                    return explodedJar;
+                }
+                if (target.getAttribute(Attribute.of(ProcessingAspect.class)) == ProcessingAspect.DEX) {
+                    return explodedJar;
+                }
+                if (target.getAttribute(Attribute.of(ProcessingAspect.class)) == ProcessingAspect.MANIFEST_MERGE) {
+                    return new File(explodedAar, "AndroidManifest.xml")
+                }
+                return null;
             }
         }
         """
@@ -294,30 +331,24 @@ abstract public class AbstractAARFilterAndTransformIntegrationTest extends Abstr
             return ""
         }
         """
-        @TransformInput(format = 'jar')
         class JarTransform extends ArtifactTransform {
             private Project files
 
             private File jar
             private File classesFolder
 
-            @TransformOutput(format = 'classpath')
-            File getClasspathElement() {
-                jar
+            void configure(AttributeContainer from, AttributeTransformTargetRegistry targetRegistry) {
+                from.attribute(Attribute.of(ArtifactExtension), new ArtifactExtension("jar"))
+
+                targetRegistry.newTarget().attribute(Attribute.of(FileFormat), FileFormat.CLASS_FOLDER)
+                targetRegistry.newTarget().attribute(Attribute.of(FileFormat), FileFormat.JAR)
+                targetRegistry.newTarget().attribute(Attribute.of(ProcessingAspect), ProcessingAspect.DEX)
+                targetRegistry.newTarget().attribute(Attribute.of(ProcessingAspect), ProcessingAspect.JVM_CLASSPATH)
             }
 
-            @TransformOutput(format = 'classes')
-            File getClassesFolder() {
-                classesFolder
-            }
-
-            void transform(File input) {
+            File transform(File input, AttributeContainer target) {
                 jar = input
 
-                //We could use a location based on the input, since the classes folder is similar for all consumers.
-                //Maybe the output should not be configured from the outside, but the context of the consumer should
-                //be always passed in automatically (as we do with "Project files") here. Then the consumer and
-                //properties of it (e.g. dex options) can be used in the output location
                 classesFolder = new File(outputDirectory, input.name + "/classes")
                 if (!classesFolder.exists()) {
                     files.copy {
@@ -325,6 +356,20 @@ abstract public class AbstractAARFilterAndTransformIntegrationTest extends Abstr
                         into classesFolder
                     }
                 }
+
+                if (target.getAttribute(Attribute.of(FileFormat.class)) == FileFormat.CLASS_FOLDER) {
+                    return classesFolder;
+                }
+                if (target.getAttribute(Attribute.of(ProcessingAspect.class)) == ProcessingAspect.DEX) {
+                    return classesFolder;
+                }
+                if (target.getAttribute(Attribute.of(FileFormat.class)) == FileFormat.JAR) {
+                    return jar;
+                }
+                if (target.getAttribute(Attribute.of(ProcessingAspect.class)) == ProcessingAspect.JVM_CLASSPATH) {
+                    return jar;
+                }
+                return null;
             }
         }
         """
@@ -335,19 +380,14 @@ abstract public class AbstractAARFilterAndTransformIntegrationTest extends Abstr
             return ""
         }
         """
-        @TransformInput(format = 'classes')
         class ClassesFolderClasspathTransform extends ArtifactTransform {
             private Project files
 
-            private File classesFolder
+            void configure(AttributeContainer from, AttributeTransformTargetRegistry targetRegistry) {
+                from.attribute(Attribute.of(FileFormat), FileFormat.CLASS_FOLDER)
 
-            @TransformOutput(format = 'classpath')
-            File getClasspathElement() {
-                classesFolder
-            }
-
-            void transform(File input) {
-                classesFolder = input
+                targetRegistry.newTarget().attribute(Attribute.of(ProcessingAspect), ProcessingAspect.JVM_CLASSPATH)
+                targetRegistry.newTarget().attribute(Attribute.of(ProcessingAspect), ProcessingAspect.DEX)
             }
         }
         """
@@ -365,21 +405,23 @@ abstract public class AbstractAARFilterAndTransformIntegrationTest extends Abstr
         """
     }
 
-    def formatInConfiguration(String formatName) {
+    def defineArtifactQuery(String type, String formatName) {
         if (!enabledFeatures().contains(Feature.FILTER_LOCAL) && !enabledFeatures().contains(Feature.FILTER_EXTERNAL)) {
             return ""
         }
         """
-        format = '$formatName'
+        artifactsQuery {
+            attribute(Attribute.of($type), $type.$formatName)
+        }
         """
     }
 
-    def formatInLocalArtifact(String formatName) {
+    def defineLocalArtifactAttribute(String type, String formatName) {
         if (!enabledFeatures().contains(Feature.FILTER_LOCAL)) {
             return ""
         }
         """
-        type '$formatName'
+        attributes.attribute(Attribute.of($type), $type.$formatName)
         """
     }
 

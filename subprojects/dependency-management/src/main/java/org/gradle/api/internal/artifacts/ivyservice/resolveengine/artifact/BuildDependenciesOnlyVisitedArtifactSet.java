@@ -16,6 +16,7 @@
 
 package org.gradle.api.internal.artifacts.ivyservice.resolveengine.artifact;
 
+import org.gradle.api.AttributeContainer;
 import org.gradle.api.Nullable;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ResolveException;
@@ -40,8 +41,8 @@ public class BuildDependenciesOnlyVisitedArtifactSet implements VisitedArtifactS
     }
 
     @Override
-    public SelectedArtifactSet select(Spec<? super Dependency> dependencySpec, @Nullable String format) {
-        Spec<ResolvedArtifact> spec = artifactTransformer.select(format);
+    public SelectedArtifactSet select(Spec<? super Dependency> dependencySpec, @Nullable AttributeContainer attributes) {
+        Spec<ResolvedArtifact> spec = artifactTransformer.select(attributes);
         ResolvedArtifactSet selectedArtifacts;
         ResolvedArtifactSet selectedFiles;
         if (spec == Specs.<ResolvedArtifact>satisfyAll()) {
