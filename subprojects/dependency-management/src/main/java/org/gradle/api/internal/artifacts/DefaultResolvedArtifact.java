@@ -15,6 +15,7 @@
  */
 package org.gradle.api.internal.artifacts;
 
+import org.gradle.api.AttributeContainer;
 import org.gradle.api.Buildable;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
@@ -93,6 +94,10 @@ public class DefaultResolvedArtifact implements ResolvedArtifact, Buildable {
 
     public String getClassifier() {
         return artifact.getClassifier();
+    }
+
+    public AttributeContainer getAttributes() {
+        return artifact.getAttributes();
     }
 
     public File getFile() {

@@ -16,6 +16,8 @@
 
 package org.gradle.internal.component.model;
 
+import org.gradle.api.AttributeContainer;
+import org.gradle.api.Incubating;
 import org.gradle.api.Nullable;
 
 /**
@@ -31,4 +33,7 @@ public interface IvyArtifactName {
 
     @Nullable
     String getClassifier();
+
+    @Incubating
+    AttributeContainer getAttributes();
 }
