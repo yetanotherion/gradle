@@ -8,7 +8,7 @@ if (java7Home) {
         assert executable.exists() : "There is no ${execName} executable in ${javaExecutablesPath}"
         executable
     }
-    tasks.withType(AbstractCompile) {
+    tasks.withType(JavaCompile) {
         options.with {
             fork = true
             forkOptions.executable = javaExecutables.javac
