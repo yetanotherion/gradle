@@ -1,3 +1,21 @@
+if (hasProperty('java7Home')) {
+    def javaExecutablesPath = new File(java7Home, 'bin')
+    def javaExecutables = [:].withDefault { execName ->
+        def executable = new File(javaExecutablesPath, execName)
+        assert executable.exists() : "There is no ${execName} executable in ${javaExecutablesPath}"
+        executable
+    }
+    tasks.withType(JavaCompile) {
+        options.with {
+            fork = true
+            forkOptions.executable = javaExecutables.javac
+        }
+    }
+    tasks.withType(Javadoc) {
+        executable = javaExecutables.javadoc
+    }
+}
+
 tasks.withType(JavaCompile) {
     options.encoding = 'utf-8'
     options.compilerArgs = ['-Xlint:-options']
