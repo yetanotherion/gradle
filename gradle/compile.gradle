@@ -18,11 +18,11 @@ if (hasProperty('java7Home')) {
 
 tasks.withType(JavaCompile) {
     options.encoding = 'utf-8'
-    options.compilerArgs = ['-Xlint:-options']
+    options.compilerArgs = ['-Xlint:-options', '-Xlint:-path']
 }
 tasks.withType(GroovyCompile) {
     options.encoding = 'utf-8'
-    options.compilerArgs = ['-Xlint:-options']
+    options.compilerArgs = ['-Xlint:-options', '-Xlint:-path']
     groovyOptions.encoding = 'utf-8'
     if (!JavaVersion.current().java8Compatible) {
         options.forkOptions.jvmArgs = ['-XX:MaxPermSize=512m']
