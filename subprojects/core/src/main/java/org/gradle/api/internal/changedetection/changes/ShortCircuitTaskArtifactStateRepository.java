@@ -59,8 +59,11 @@ public class ShortCircuitTaskArtifactStateRepository implements TaskArtifactStat
     }
 
     @Override
-    public TaskExecution currentExecution(TaskInternal task) {
-        return repository.currentExecution(task);
+    public TaskExecution currentExecution(TaskInternal task, TaskArtifactState taskArtifactState) {
+        if (taskArtifactState instanceof RerunTaskArtifactState) {
+            taskArtifactState = ((RerunTaskArtifactState) taskArtifactState).delegate;
+        }
+        return repository.currentExecution(task, taskArtifactState);
     }
 
     private class RerunTaskArtifactState implements TaskArtifactState {

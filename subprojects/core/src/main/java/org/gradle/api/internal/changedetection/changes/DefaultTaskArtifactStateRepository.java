@@ -22,7 +22,6 @@ import org.gradle.api.internal.TaskExecutionHistory;
 import org.gradle.api.internal.TaskInternal;
 import org.gradle.api.internal.changedetection.TaskArtifactState;
 import org.gradle.api.internal.changedetection.TaskArtifactStateRepository;
-import org.gradle.api.internal.changedetection.rules.AbstractNamedFileSnapshotTaskStateChanges;
 import org.gradle.api.internal.changedetection.rules.InputPropertiesTaskStateChanges;
 import org.gradle.api.internal.changedetection.rules.TaskStateChange;
 import org.gradle.api.internal.changedetection.rules.TaskStateChanges;
@@ -67,12 +66,11 @@ public class DefaultTaskArtifactStateRepository implements TaskArtifactStateRepo
     }
 
     @Override
-    public TaskExecution currentExecution(TaskInternal task) {
+    public TaskExecution currentExecution(TaskInternal task, TaskArtifactState taskArtifactState) {
         TaskExecution currentExecution = taskHistoryRepository.getCurrentExecution(task);
         TaskTypeTaskStateChanges.initExecution(currentExecution, task.getClass(), task.getActionClassLoaders(), classLoaderHierarchyHasher);
         InputPropertiesTaskStateChanges.initCurrentExecution(currentExecution, task);
-        currentExecution.setInputFilesSnapshot(AbstractNamedFileSnapshotTaskStateChanges.buildSnapshots(task.getName(), fileCollectionSnapshotterRegistry, "Input",
-            task.getInputs().getFileProperties()));
+        currentExecution.setInputFilesSnapshot(((TaskArtifactStateImpl) taskArtifactState).history.getCurrentExecution().getInputFilesSnapshot());
         return currentExecution;
     }
 
