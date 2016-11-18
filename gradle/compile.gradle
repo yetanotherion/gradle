@@ -1,11 +1,14 @@
-if (hasProperty('java7Home')) {
+ext.java7Home=System.getProperty('java7.home')
+
+if (java7Home) {
     def javaExecutablesPath = new File(java7Home, 'bin')
+    def isWindows = org.gradle.internal.os.OperatingSystem.current().windows
     def javaExecutables = [:].withDefault { execName ->
-        def executable = new File(javaExecutablesPath, execName)
+        def executable = new File(javaExecutablesPath, execName + (isWindows ? ".exe" : ""))
         assert executable.exists() : "There is no ${execName} executable in ${javaExecutablesPath}"
         executable
     }
-    tasks.withType(JavaCompile) {
+    tasks.withType(AbstractCompile) {
         options.with {
             fork = true
             forkOptions.executable = javaExecutables.javac
