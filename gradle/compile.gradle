@@ -1,4 +1,10 @@
-ext.java7Home=System.getProperty('java7.home')
+if (!hasProperty('java7Home')) {
+    // We allow the system property and the project property so that it is
+    // possible to set compilation with Java 7 from the command line and from gradle.properties.
+    // Note that is this needs to work for buildSrc, too. Gradle properties passed
+    // on the command line (-P) are not inherited to buildSrc while system properties are.
+    ext.java7Home = System.getProperty('java7.home')
+}
 
 if (java7Home) {
     def javaExecutablesPath = new File(java7Home, 'bin')
