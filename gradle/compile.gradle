@@ -14,6 +14,7 @@ if (java7Home) {
         inputs.property("platform.name", "java7")
         inputs.property("options.forkOptions.executable", null)
         options.with {
+            debug = false
             fork = true
             forkOptions.executable = jvm.javacExecutable
         }
