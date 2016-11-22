@@ -501,15 +501,4 @@ public interface Configuration extends FileCollection {
     @Incubating
     boolean isCanBeResolved();
 
-    /**
-     * Sets a query to be applied to the artifacts of the configuration.
-     * May trigger transforms to transform artifacts into the desired format.
-     *
-     * @param action action applied to the {@link AttributeContainer}
-     * @return this Configuration instance
-     * @since 3.3
-     */
-    @Incubating
-    Configuration artifactFilter(Action<? super AttributeContainer> action);
-
 }

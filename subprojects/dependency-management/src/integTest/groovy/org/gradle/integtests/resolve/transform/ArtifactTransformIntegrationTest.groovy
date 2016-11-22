@@ -223,9 +223,7 @@ class FileSizer extends ArtifactTransform {
                 }
                 configurations {
                     compile {
-                        artifactFilter {
-                            attribute(Attribute.of(ArtifactExtension.class), new ArtifactExtension('size'));
-                        }
+                        attribute(Attribute.of(ArtifactExtension.class), new ArtifactExtension('size'));
                         resolutionStrategy {
                             registerTransform(FileSizer) {
                                 outputDirectory = project.file("\${buildDir}/transformed")
@@ -306,9 +304,7 @@ class FileSizer extends ArtifactTransform {
                 }
                 configurations {
                     compile {
-                        artifactFilter {
-                            attribute(ArtifactExtension.ATTRIBUTE, new ArtifactExtension('size'))
-                        }
+                        attribute(ArtifactExtension.ATTRIBUTE, new ArtifactExtension('size'))
                         resolutionStrategy {
                             registerTransform(FileSizer) {
                                 outputDirectory = project.file("\${buildDir}/transformed")
@@ -488,9 +484,7 @@ class FileSizer extends ArtifactTransform {
         """
             configurations {
                 compile {
-                    artifactFilter {
-                        attribute(Attribute.of(ArtifactExtension.class), new ArtifactExtension('size'))
-                    }
+                    attribute(Attribute.of(ArtifactExtension.class), new ArtifactExtension('size'))
                     resolutionStrategy {
                         registerTransform($transformImplementation) {
                             outputDirectory = project.file("\${buildDir}/transformed")

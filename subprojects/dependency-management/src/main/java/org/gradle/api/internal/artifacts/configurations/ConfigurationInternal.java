@@ -15,7 +15,6 @@
  */
 package org.gradle.api.internal.artifacts.configurations;
 
-import org.gradle.api.AttributeContainer;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.internal.artifacts.ResolveContext;
 
@@ -33,6 +32,4 @@ public interface ConfigurationInternal extends ResolveContext, Configuration, De
     void addMutationValidator(MutationValidator validator);
 
     void removeMutationValidator(MutationValidator validator);
-
-    AttributeContainer getArtifactFilter();
 }

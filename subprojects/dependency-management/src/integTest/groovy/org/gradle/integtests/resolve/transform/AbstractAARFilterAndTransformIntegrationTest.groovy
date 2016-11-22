@@ -237,12 +237,12 @@ abstract public class AbstractAARFilterAndTransformIntegrationTest extends Abstr
 
                 processClassFolders {
                     extendsFrom(compileClassesAndResources)
-                    artifactFilter { attribute(Attribute.of(ArtifactName), new ArtifactName('main')) }
+                    attribute(Attribute.of(ArtifactName), new ArtifactName('main'))
                 }
                 processJarFiles {
                     extendsFrom(compileClassesAndResources)
 
-                    artifactFilter { attribute(Attribute.of(ArtifactExtension), new ArtifactExtension('jar')) }
+                    attribute(Attribute.of(ArtifactExtension), new ArtifactExtension('jar'))
                 }
             }
 
@@ -406,9 +406,7 @@ abstract public class AbstractAARFilterAndTransformIntegrationTest extends Abstr
             return ""
         }
         """
-        artifactFilter {
-            attribute(Attribute.of($type), $type.$formatName)
-        }
+        attribute(Attribute.of($type), $type.$formatName)
         """
     }
 

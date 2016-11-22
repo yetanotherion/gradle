@@ -44,6 +44,11 @@ public class ArtifactTransforms {
         return null;
     }
 
+    /**
+     * TODO This is incomplete:
+     * - requiredAttributes contain attributes already matched by the configuration
+     * - MatchingStrategy of the configuration is ignored
+     */
     public boolean matchArtifactsAttributes(AttributeContainer requiredAttributes, AttributeContainer artifactAttributes) {
         for (Attribute<?> artifactAttribute : requiredAttributes.keySet()) {
             Object valueInArtifact = requiredAttributes.getAttribute(artifactAttribute);
