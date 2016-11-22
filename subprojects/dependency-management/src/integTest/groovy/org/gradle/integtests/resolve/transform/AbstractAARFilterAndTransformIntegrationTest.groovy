@@ -202,9 +202,8 @@ abstract public class AbstractAARFilterAndTransformIntegrationTest extends Abstr
                 // configurations with filtering/transformation over 'compile'
                 processClasspath {
                     extendsFrom(compileClassesAndResources)
+                    ${defineArtifactFilter('ProcessingAspect', 'JVM_CLASSPATH')} // 'classes' or 'jar'
                     resolutionStrategy {
-                        ${defineArtifactQuery('ProcessingAspect', 'JVM_CLASSPATH')} // 'classes' or 'jar'
-
                         ${registerTransform('AarExtractor')}
                         ${registerTransform('JarTransform')}
                         ${registerTransform('ClassesFolderClasspathTransform')}
@@ -212,9 +211,8 @@ abstract public class AbstractAARFilterAndTransformIntegrationTest extends Abstr
                 }
                 processClasses {
                     extendsFrom(compileClassesAndResources)
+                    ${defineArtifactFilter('ProcessingAspect', 'DEX')}
                     resolutionStrategy {
-                        ${defineArtifactQuery('ProcessingAspect', 'DEX')}
-
                         ${registerTransform('AarExtractor')}
                         ${registerTransform('JarTransform')}
                         ${registerTransform('ClassesFolderClasspathTransform')}
@@ -222,9 +220,8 @@ abstract public class AbstractAARFilterAndTransformIntegrationTest extends Abstr
                 }
                 processJar {
                     extendsFrom(compileClassesAndResources)
+                    ${defineArtifactFilter('FileFormat', 'JAR')}
                     resolutionStrategy {
-                        ${defineArtifactQuery('FileFormat', 'JAR')}
-
                         ${registerTransform('AarExtractor')}
                         ${registerTransform('JarTransform')}
                         ${registerTransform('ClassesFolderClasspathTransform')}
@@ -232,21 +229,20 @@ abstract public class AbstractAARFilterAndTransformIntegrationTest extends Abstr
                 }
                 processManifests {
                     extendsFrom(compileClassesAndResources)
+                    ${defineArtifactFilter('ProcessingAspect', 'MANIFEST_MERGE')}
                     resolutionStrategy {
-                        ${defineArtifactQuery('ProcessingAspect', 'MANIFEST_MERGE')}
-
                         ${registerTransform('AarExtractor')}
                     }
                 }
 
                 processClassFolders {
                     extendsFrom(compileClassesAndResources)
-                    resolutionStrategy { artifactsQuery { attribute(Attribute.of(ArtifactName), new ArtifactName('main')) } }
+                    artifactFilter { attribute(Attribute.of(ArtifactName), new ArtifactName('main')) }
                 }
                 processJarFiles {
                     extendsFrom(compileClassesAndResources)
 
-                    resolutionStrategy { artifactsQuery { attribute(Attribute.of(ArtifactExtension), new ArtifactExtension('jar')) } }
+                    artifactFilter { attribute(Attribute.of(ArtifactExtension), new ArtifactExtension('jar')) }
                 }
             }
 
@@ -405,12 +401,12 @@ abstract public class AbstractAARFilterAndTransformIntegrationTest extends Abstr
         """
     }
 
-    def defineArtifactQuery(String type, String formatName) {
+    def defineArtifactFilter(String type, String formatName) {
         if (!enabledFeatures().contains(Feature.FILTER_LOCAL) && !enabledFeatures().contains(Feature.FILTER_EXTERNAL)) {
             return ""
         }
         """
-        artifactsQuery {
+        artifactFilter {
             attribute(Attribute.of($type), $type.$formatName)
         }
         """

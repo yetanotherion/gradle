@@ -91,17 +91,6 @@ public class DefaultResolutionStrategy implements ResolutionStrategyInternal {
     }
 
     @Override
-    public AttributeContainer getArtifactsQuery() {
-        return artifactsQuery;
-    }
-
-    @Override
-    public ResolutionStrategy artifactsQuery(Action<? super AttributeContainer> action) {
-        action.execute(artifactsQuery);
-        return this;
-    }
-
-    @Override
     public Transformer<File, File> getTransform(AttributeContainer from, AttributeContainer to) {
         return transforms.getTransform(from, to);
     }

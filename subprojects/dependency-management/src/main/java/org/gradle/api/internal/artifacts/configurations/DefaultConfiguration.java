@@ -140,6 +140,7 @@ public class DefaultConfiguration extends AbstractFileCollection implements Conf
     private boolean canBeConsumed = true;
     private boolean canBeResolved = true;
     private final DefaultAttributeContainer configurationAttributes = new DefaultAttributeContainer();
+    private final DefaultAttributeContainer artifactFilter = new DefaultAttributeContainer();
 
     public DefaultConfiguration(String path, String name, ConfigurationsProvider configurationsProvider,
                                 ConfigurationResolver resolver, ListenerManager listenerManager,
@@ -328,7 +329,7 @@ public class DefaultConfiguration extends AbstractFileCollection implements Conf
     }
 
     public Set<File> getFiles() {
-        return doGetFiles(Specs.<Dependency>satisfyAll(), getResolutionStrategy().getArtifactsQuery());
+        return doGetFiles(Specs.<Dependency>satisfyAll(), getArtifactFilter());
     }
 
     public Set<File> files(Dependency... dependencies) {
@@ -456,7 +457,7 @@ public class DefaultConfiguration extends AbstractFileCollection implements Conf
 
     public TaskDependency getBuildDependencies() {
         assertResolvingAllowed();
-        return doGetTaskDependency(Specs.<Dependency>satisfyAll(), getResolutionStrategy().getArtifactsQuery());
+        return doGetTaskDependency(Specs.<Dependency>satisfyAll(), getArtifactFilter());
     }
 
     private TaskDependency doGetTaskDependency(Spec<? super Dependency> dependencySpec, @Nullable AttributeContainer attributes) {
@@ -735,7 +736,7 @@ public class DefaultConfiguration extends AbstractFileCollection implements Conf
 
         @Override
         public TaskDependency getBuildDependencies() {
-            return doGetTaskDependency(dependencySpec, attributes != null ? attributes : DefaultConfiguration.this.getResolutionStrategy().getArtifactsQuery());
+            return doGetTaskDependency(dependencySpec, attributes != null ? attributes : DefaultConfiguration.this.getArtifactFilter());
         }
 
         public Spec<? super Dependency> getDependencySpec() {
@@ -747,7 +748,7 @@ public class DefaultConfiguration extends AbstractFileCollection implements Conf
         }
 
         public Set<File> getFiles() {
-            return doGetFiles(dependencySpec, attributes != null ? attributes : DefaultConfiguration.this.getResolutionStrategy().getArtifactsQuery());
+            return doGetFiles(dependencySpec, attributes != null ? attributes : DefaultConfiguration.this.getArtifactFilter());
         }
     }
 
@@ -784,6 +785,16 @@ public class DefaultConfiguration extends AbstractFileCollection implements Conf
     @Override
     public AttributeContainer getAttributes() {
         return configurationAttributes;
+    }
+
+    public DefaultAttributeContainer getArtifactFilter() {
+        return artifactFilter;
+    }
+
+    @Override
+    public Configuration artifactFilter(Action<? super AttributeContainer> action) {
+        action.execute(artifactFilter);
+        return this;
     }
 
     @Override
@@ -939,7 +950,7 @@ public class DefaultConfiguration extends AbstractFileCollection implements Conf
         @Override
         public Set<ResolvedArtifactResult> getArtifacts() {
             resolveToStateOrLater(ARTIFACTS_RESOLVED);
-            return cachedResolverResults.getVisitedArtifacts().select(Specs.<Dependency>satisfyAll(), getResolutionStrategy().getArtifactsQuery()).collectArtifacts(new LinkedHashSet<ResolvedArtifactResult>());
+            return cachedResolverResults.getVisitedArtifacts().select(Specs.<Dependency>satisfyAll(), getArtifactFilter()).collectArtifacts(new LinkedHashSet<ResolvedArtifactResult>());
         }
     }
 

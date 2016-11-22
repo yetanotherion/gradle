@@ -17,7 +17,6 @@
 package org.gradle.api.artifacts;
 
 import org.gradle.api.Action;
-import org.gradle.api.AttributeContainer;
 import org.gradle.api.Incubating;
 import org.gradle.api.artifacts.transform.ArtifactTransform;
 
@@ -287,17 +286,6 @@ public interface ResolutionStrategy {
      */
     @Incubating
     ResolutionStrategy dependencySubstitution(Action<? super DependencySubstitutions> action);
-
-    /**
-     * Sets a query to be applied to the artifacts of the configuration.
-     * May trigger transforms to transform artifacts into the desired format.
-     *
-     * @param action action applied to the {@link AttributeContainer}
-     * @return this ResolutionStrategy instance
-     * @since 3.3
-     */
-    @Incubating
-    ResolutionStrategy artifactsQuery(Action<? super AttributeContainer> action);
 
     /**
      * Register an artifact transformation.

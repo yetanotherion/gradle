@@ -82,8 +82,6 @@ public interface ResolutionStrategyInternal extends ResolutionStrategy {
      */
     void setMutationValidator(MutationValidator action);
 
-    AttributeContainer getArtifactsQuery();
-
     /**
      * @param from format to transform from
      * @param to format to transform to

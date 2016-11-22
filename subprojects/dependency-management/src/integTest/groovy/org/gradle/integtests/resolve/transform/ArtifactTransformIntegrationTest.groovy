@@ -223,10 +223,10 @@ class FileSizer extends ArtifactTransform {
                 }
                 configurations {
                     compile {
+                        artifactFilter {
+                            attribute(Attribute.of(ArtifactExtension.class), new ArtifactExtension('size'));
+                        }
                         resolutionStrategy {
-                            artifactsQuery {
-                                attribute(Attribute.of(ArtifactExtension.class), new ArtifactExtension('size'));
-                            }
                             registerTransform(FileSizer) {
                                 outputDirectory = project.file("\${buildDir}/transformed")
                             }
@@ -306,10 +306,10 @@ class FileSizer extends ArtifactTransform {
                 }
                 configurations {
                     compile {
+                        artifactFilter {
+                            attribute(ArtifactExtension.ATTRIBUTE, new ArtifactExtension('size'))
+                        }
                         resolutionStrategy {
-                            artifactsQuery {
-                                attribute(Attribute.of(ArtifactExtension.class), new ArtifactExtension('size'));
-                            }
                             registerTransform(FileSizer) {
                                 outputDirectory = project.file("\${buildDir}/transformed")
                             }
@@ -488,10 +488,10 @@ class FileSizer extends ArtifactTransform {
         """
             configurations {
                 compile {
+                    artifactFilter {
+                        attribute(Attribute.of(ArtifactExtension.class), new ArtifactExtension('size'))
+                    }
                     resolutionStrategy {
-                        artifactsQuery {
-                            attribute(Attribute.of(ArtifactExtension.class), new ArtifactExtension('size'))
-                        }
                         registerTransform($transformImplementation) {
                             outputDirectory = project.file("\${buildDir}/transformed")
                         }
