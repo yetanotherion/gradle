@@ -15,6 +15,7 @@
  */
 package org.gradle.api.internal.tasks.compile;
 
+import com.google.common.collect.Iterables;
 import org.gradle.api.internal.tasks.SimpleWorkResult;
 import org.gradle.api.tasks.WorkResult;
 import org.gradle.api.tasks.compile.CompileOptions;
@@ -26,8 +27,10 @@ import org.slf4j.LoggerFactory;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
+import java.io.File;
 import java.io.Serializable;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.List;
 
 public class JdkJavaCompiler implements Compiler<JavaCompileSpec>, Serializable {
@@ -56,7 +59,12 @@ public class JdkJavaCompiler implements Compiler<JavaCompileSpec>, Serializable 
         JavaCompiler compiler = javaHomeBasedJavaCompilerFactory.create();
         CompileOptions compileOptions = spec.getCompileOptions();
         StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, compileOptions.getEncoding() != null ? Charset.forName(compileOptions.getEncoding()) : null);
-        Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromFiles(spec.getSource());
+
+        // Sort source files to work around https://issues.apache.org/jira/browse/GROOVY-7966
+        File[] sortedSourceFiles = Iterables.toArray(spec.getSource(), File.class);
+        Arrays.sort(sortedSourceFiles);
+
+        Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjects(sortedSourceFiles);
         return compiler.getTask(null, null, null, options, null, compilationUnits);
     }
 }

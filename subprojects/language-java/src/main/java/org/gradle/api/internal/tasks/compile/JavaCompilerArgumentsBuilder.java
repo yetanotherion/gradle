@@ -17,12 +17,14 @@
 package org.gradle.api.internal.tasks.compile;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.Iterables;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.compile.CompileOptions;
 import org.gradle.api.tasks.compile.ForkOptions;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class JavaCompilerArgumentsBuilder {
@@ -202,8 +204,11 @@ public class JavaCompilerArgumentsBuilder {
         if (!includeSourceFiles) {
             return;
         }
+        // Sort source files to work around https://issues.apache.org/jira/browse/GROOVY-7966
+        File[] sortedSourceFiles = Iterables.toArray(spec.getSource(), File.class);
+        Arrays.sort(sortedSourceFiles);
 
-        for (File file : spec.getSource()) {
+        for (File file : sortedSourceFiles) {
             args.add(file.getPath());
         }
     }
