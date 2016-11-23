@@ -16,10 +16,8 @@
 
 package org.gradle.api.artifacts.transform.internal;
 
-import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import org.gradle.api.Action;
-import org.gradle.api.Attribute;
 import org.gradle.api.AttributeContainer;
 import org.gradle.api.Transformer;
 import org.gradle.api.artifacts.transform.ArtifactTransform;
@@ -35,31 +33,6 @@ import java.util.List;
 public class ArtifactTransforms {
     private final List<DependencyTransformRegistration> transforms = Lists.newArrayList();
 
-    public Transformer<File, File> getTransform(AttributeContainer from, AttributeContainer to) {
-        for (DependencyTransformRegistration transformReg : transforms) {
-            if (matchArtifactsAttributes(transformReg.from, from) && matchArtifactsAttributes(transformReg.to, to)) {
-                return transformReg.getTransformer();
-            }
-        }
-        return null;
-    }
-
-    /**
-     * TODO This is incomplete:
-     * - requiredAttributes contain attributes already matched by the configuration
-     * - MatchingStrategy of the configuration is ignored
-     */
-    public boolean matchArtifactsAttributes(AttributeContainer requiredAttributes, AttributeContainer artifactAttributes) {
-        for (Attribute<?> artifactAttribute : requiredAttributes.keySet()) {
-            Object valueInArtifact = requiredAttributes.getAttribute(artifactAttribute);
-            Object valueInConfiguration = artifactAttributes.getAttribute(artifactAttribute);
-            if (!Objects.equal(valueInArtifact, valueInConfiguration)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     public void registerTransform(Class<? extends ArtifactTransform> type, Action<? super ArtifactTransform> config) {
         ArtifactTransform artifactTransform = DirectInstantiator.INSTANCE.newInstance(type);
         AttributeContainerInternal from = new DefaultAttributeContainer();
@@ -73,7 +46,11 @@ public class ArtifactTransforms {
         }
     }
 
-    private final class DependencyTransformRegistration {
+    public List<DependencyTransformRegistration> getTransforms() {
+        return transforms;
+    }
+
+    public final class DependencyTransformRegistration {
         final AttributeContainer from;
         final AttributeContainer to;
         final Class<? extends ArtifactTransform> type;
@@ -84,6 +61,14 @@ public class ArtifactTransforms {
             this.to = to;
             this.type = type;
             this.config = config;
+        }
+
+        public AttributeContainer getFrom() {
+            return from;
+        }
+
+        public AttributeContainer getTo() {
+            return to;
         }
 
         public Transformer<File, File> getTransformer() {

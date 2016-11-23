@@ -16,7 +16,9 @@
 
 package org.gradle.api.internal.artifacts.ivyservice.resolutionstrategy;
 
+import com.google.common.base.Objects;
 import org.gradle.api.Action;
+import org.gradle.api.Attribute;
 import org.gradle.api.AttributeContainer;
 import org.gradle.api.Transformer;
 import org.gradle.api.artifacts.ComponentSelection;
@@ -92,12 +94,24 @@ public class DefaultResolutionStrategy implements ResolutionStrategyInternal {
 
     @Override
     public Transformer<File, File> getTransform(AttributeContainer from, AttributeContainer to) {
-        return transforms.getTransform(from, to);
+        for (ArtifactTransforms.DependencyTransformRegistration transformReg : transforms.getTransforms()) {
+            if (matchArtifactsAttributes(transformReg.getFrom(), from) && matchArtifactsAttributes(transformReg.getTo(), to)) {
+                return transformReg.getTransformer();
+            }
+        }
+        return null;
     }
 
     @Override
     public boolean matchArtifactsAttributes(AttributeContainer requiredAttributes, AttributeContainer providedAttributes) {
-        return transforms.matchArtifactsAttributes(requiredAttributes, providedAttributes);
+        for (Attribute<?> artifactAttribute : requiredAttributes.keySet()) {
+            Object valueInArtifact = requiredAttributes.getAttribute(artifactAttribute);
+            Object valueInConfiguration = providedAttributes.getAttribute(artifactAttribute);
+            if (!Objects.equal(valueInArtifact, valueInConfiguration)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
