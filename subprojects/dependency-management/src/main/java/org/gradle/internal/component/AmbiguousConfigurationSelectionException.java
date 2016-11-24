@@ -25,6 +25,7 @@ import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.gradle.api.Attribute;
 import org.gradle.api.AttributeContainer;
+import org.gradle.api.HasAttributes;
 import org.gradle.internal.component.model.ConfigurationMetadata;
 
 import java.util.ArrayList;
@@ -33,9 +34,9 @@ import java.util.List;
 import java.util.Set;
 
 public class AmbiguousConfigurationSelectionException extends IllegalArgumentException {
-    private static final Function<ConfigurationMetadata, String> CONFIG_NAME = new Function<ConfigurationMetadata, String>() {
+    private static final Function<HasAttributes, String> CONFIG_NAME = new Function<HasAttributes, String>() {
         @Override
-        public String apply(ConfigurationMetadata input) {
+        public String apply(HasAttributes input) {
             return input.getName();
         }
     };
@@ -46,11 +47,11 @@ public class AmbiguousConfigurationSelectionException extends IllegalArgumentExc
         }
     };
 
-    public AmbiguousConfigurationSelectionException(AttributeContainer fromConfigurationAttributes, List<ConfigurationMetadata> matches, boolean fullMatch) {
+    public AmbiguousConfigurationSelectionException(AttributeContainer fromConfigurationAttributes, List<HasAttributes> matches, boolean fullMatch) {
         super(generateMessage(fromConfigurationAttributes, matches, fullMatch));
     }
 
-    private static String generateMessage(AttributeContainer fromConfigurationAttributes, List<ConfigurationMetadata> matches, boolean fullMatch) {
+    private static String generateMessage(AttributeContainer fromConfigurationAttributes, List<HasAttributes> matches, boolean fullMatch) {
         Set<String> ambiguousConfigurations = Sets.newTreeSet(Lists.transform(matches, CONFIG_NAME));
         Set<String> requestedAttributes = Sets.newTreeSet(Iterables.transform(fromConfigurationAttributes.keySet(), ATTRIBUTE_NAME));
         StringBuilder sb = new StringBuilder("Cannot choose between the following configurations: ");
@@ -70,10 +71,10 @@ public class AmbiguousConfigurationSelectionException extends IllegalArgumentExc
         return sb.toString();
     }
 
-    private static void formatAmbiguousConfiguration(StringBuilder sb, AttributeContainer fromConfigurationAttributes, List<ConfigurationMetadata> matches, Set<String> requestedAttributes, int maxConfLength, final String ambiguousConf) {
-        ConfigurationMetadata match = Iterables.find(matches, new Predicate<ConfigurationMetadata>() {
+    private static void formatAmbiguousConfiguration(StringBuilder sb, AttributeContainer fromConfigurationAttributes, List<HasAttributes> matches, Set<String> requestedAttributes, int maxConfLength, final String ambiguousConf) {
+        HasAttributes match = Iterables.find(matches, new Predicate<HasAttributes>() {
             @Override
-            public boolean apply(ConfigurationMetadata input) {
+            public boolean apply(HasAttributes input) {
                 return ambiguousConf.equals(input.getName());
             }
         });

@@ -15,7 +15,7 @@
  */
 package org.gradle.api.artifacts;
 
-import org.gradle.api.AttributeContainer;
+import org.gradle.api.HasAttributes;
 import org.gradle.api.Incubating;
 import org.gradle.api.artifacts.component.ComponentArtifactIdentifier;
 
@@ -24,7 +24,7 @@ import java.io.File;
 /**
  * Information about a resolved artifact.
  */
-public interface ResolvedArtifact {
+public interface ResolvedArtifact extends HasAttributes {
     File getFile();
 
     /**
@@ -41,9 +41,6 @@ public interface ResolvedArtifact {
     String getExtension();
 
     String getClassifier();
-
-    @Incubating
-    AttributeContainer getAttributes();
 
     @Incubating
     ComponentArtifactIdentifier getId();
