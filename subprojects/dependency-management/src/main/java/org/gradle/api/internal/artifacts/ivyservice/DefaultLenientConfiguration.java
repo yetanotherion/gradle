@@ -16,7 +16,6 @@
 package org.gradle.api.internal.artifacts.ivyservice;
 
 import com.google.common.collect.Sets;
-import org.gradle.api.AttributeContainer;
 import org.gradle.api.Nullable;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
@@ -82,7 +81,7 @@ public class DefaultLenientConfiguration implements LenientConfiguration, Visite
     }
 
     @Override
-    public SelectedArtifactSet select(final Spec<? super Dependency> dependencySpec, final AttributeContainer attributes) {
+    public SelectedArtifactSet select(final Spec<? super Dependency> dependencySpec) {
         return new SelectedArtifactSet() {
             @Override
             public <T extends Collection<Object>> T collectBuildDependencies(T dest) {
@@ -93,17 +92,17 @@ public class DefaultLenientConfiguration implements LenientConfiguration, Visite
 
             @Override
             public void visitArtifacts(ArtifactVisitor visitor) {
-                DefaultLenientConfiguration.this.visitArtifacts(dependencySpec, attributes, visitor);
+                DefaultLenientConfiguration.this.visitArtifacts(dependencySpec, visitor);
             }
 
             @Override
             public <T extends Collection<? super File>> T collectFiles(T dest) throws ResolveException {
-                return DefaultLenientConfiguration.this.collectFiles(dependencySpec, attributes, dest);
+                return DefaultLenientConfiguration.this.collectFiles(dependencySpec, dest);
             }
 
             @Override
             public <T extends Collection<? super ResolvedArtifactResult>> T collectArtifacts(T dest) throws ResolveException {
-                return DefaultLenientConfiguration.this.collectArtifacts(dependencySpec, attributes, dest);
+                return DefaultLenientConfiguration.this.collectArtifacts(dependencySpec, dest);
             }
         };
     }
@@ -175,7 +174,7 @@ public class DefaultLenientConfiguration implements LenientConfiguration, Visite
     public Set<File> getFiles(Spec<? super Dependency> dependencySpec) {
         Set<File> files = Sets.newLinkedHashSet();
         FilesAndArtifactCollectingVisitor visitor = new FilesAndArtifactCollectingVisitor(files);
-        visitArtifacts(dependencySpec, null, visitor);
+        visitArtifacts(dependencySpec, visitor);
         files.addAll(getFiles(filterUnresolved(visitor.artifacts)));
         return files;
     }
@@ -183,11 +182,11 @@ public class DefaultLenientConfiguration implements LenientConfiguration, Visite
     /**
      * Collects files reachable from first level dependencies that satisfy the given spec. Fails when any file cannot be resolved
      */
-    private <T extends Collection<? super File>> T collectFiles(Spec<? super Dependency> dependencySpec, AttributeContainer attributes, T dest) throws ResolveException {
+    private <T extends Collection<? super File>> T collectFiles(Spec<? super Dependency> dependencySpec, T dest) throws ResolveException {
         rethrowFailure();
         ResolvedFilesCollectingVisitor visitor = new ResolvedFilesCollectingVisitor(dest);
         try {
-            visitArtifacts(dependencySpec, attributes, visitor);
+            visitArtifacts(dependencySpec, visitor);
             // The visitor adds file dependencies directly to the destination collection however defers adding the artifacts. This is to ensure a fixed order regardless of whether the first level dependencies are filtered or not
             // File dependencies and artifacts are currently treated separately as a migration step
             visitor.addArtifacts();
@@ -203,11 +202,11 @@ public class DefaultLenientConfiguration implements LenientConfiguration, Visite
     /**
      * Collects all resolved artifacts. Fails when any artifact cannot be resolved.
      */
-    private <T extends Collection<? super ResolvedArtifactResult>> T collectArtifacts(Spec<? super Dependency> dependencySpec, AttributeContainer attributes, T dest) throws ResolveException {
+    private <T extends Collection<? super ResolvedArtifactResult>> T collectArtifacts(Spec<? super Dependency> dependencySpec, T dest) throws ResolveException {
         rethrowFailure();
         ResolvedArtifactCollectingVisitor visitor = new ResolvedArtifactCollectingVisitor(dest);
         try {
-            visitArtifacts(dependencySpec, attributes, visitor);
+            visitArtifacts(dependencySpec, visitor);
         } catch (Throwable t) {
             visitor.failures.add(t);
         }
@@ -227,7 +226,7 @@ public class DefaultLenientConfiguration implements LenientConfiguration, Visite
      */
     public Set<ResolvedArtifact> getArtifacts(Spec<? super Dependency> dependencySpec) {
         ArtifactCollectingVisitor visitor = new ArtifactCollectingVisitor();
-        visitArtifacts(dependencySpec, null, visitor);
+        visitArtifacts(dependencySpec, visitor);
         return filterUnresolved(visitor.artifacts);
     }
 
@@ -259,8 +258,8 @@ public class DefaultLenientConfiguration implements LenientConfiguration, Visite
      *
      * @param dependencySpec dependency spec
      */
-    private void visitArtifacts(Spec<? super Dependency> dependencySpec, AttributeContainer attributes, ArtifactVisitor visitor) {
-        visitor = artifactTransformer.visitor(visitor, attributes);
+    private void visitArtifacts(Spec<? super Dependency> dependencySpec, ArtifactVisitor visitor) {
+        visitor = artifactTransformer.visitor(visitor);
 
         //this is not very nice might be good enough until we get rid of ResolvedConfiguration and friends
         //avoid traversing the graph causing the full ResolvedDependency graph to be loaded for the most typical scenario

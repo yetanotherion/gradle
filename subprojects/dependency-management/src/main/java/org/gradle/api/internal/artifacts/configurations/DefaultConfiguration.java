@@ -474,7 +474,7 @@ public class DefaultConfiguration extends AbstractFileCollection implements Conf
                 results = cachedResolverResults;
             }
             List<Object> buildDependencies = new ArrayList<Object>();
-            results.getVisitedArtifacts().select(dependencySpec, configurationAttributes).collectBuildDependencies(buildDependencies);
+            results.getVisitedArtifacts().select(dependencySpec).collectBuildDependencies(buildDependencies);
             return TaskDependencies.of(buildDependencies);
         }
     }
@@ -482,7 +482,7 @@ public class DefaultConfiguration extends AbstractFileCollection implements Conf
     private Set<File> doGetFiles(Spec<? super Dependency> dependencySpec) {
         synchronized (resolutionLock) {
             resolveToStateOrLater(ARTIFACTS_RESOLVED);
-            return cachedResolverResults.getVisitedArtifacts().select(dependencySpec, configurationAttributes).collectFiles(new LinkedHashSet<File>());
+            return cachedResolverResults.getVisitedArtifacts().select(dependencySpec).collectFiles(new LinkedHashSet<File>());
         }
     }
 
@@ -925,7 +925,7 @@ public class DefaultConfiguration extends AbstractFileCollection implements Conf
         @Override
         public Set<ResolvedArtifactResult> getArtifacts() {
             resolveToStateOrLater(ARTIFACTS_RESOLVED);
-            return cachedResolverResults.getVisitedArtifacts().select(Specs.<Dependency>satisfyAll(), configurationAttributes).collectArtifacts(new LinkedHashSet<ResolvedArtifactResult>());
+            return cachedResolverResults.getVisitedArtifacts().select(Specs.<Dependency>satisfyAll()).collectArtifacts(new LinkedHashSet<ResolvedArtifactResult>());
         }
     }
 

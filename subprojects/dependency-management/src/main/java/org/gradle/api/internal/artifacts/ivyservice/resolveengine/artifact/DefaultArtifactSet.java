@@ -16,13 +16,16 @@
 
 package org.gradle.api.internal.artifacts.ivyservice.resolveengine.artifact;
 
+import org.gradle.api.AttributeContainer;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.component.ComponentArtifactIdentifier;
 import org.gradle.api.internal.artifacts.DefaultResolvedArtifact;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.excludes.ModuleExclusion;
 import org.gradle.internal.Factory;
+import org.gradle.internal.component.local.model.PublishArtifactLocalArtifactMetadata;
 import org.gradle.internal.component.model.ComponentArtifactMetadata;
+import org.gradle.internal.component.model.DefaultIvyArtifactName;
 import org.gradle.internal.component.model.IvyArtifactName;
 import org.gradle.internal.component.model.ModuleSource;
 import org.gradle.internal.resolve.resolver.ArtifactResolver;
@@ -70,6 +73,9 @@ public class DefaultArtifactSet implements ArtifactSet {
             ResolvedArtifact resolvedArtifact = allResolvedArtifacts.get(artifact.getId());
             if (resolvedArtifact == null) {
                 Factory<File> artifactSource = new LazyArtifactSource(artifact, moduleSource, artifactResolver);
+
+                AttributeContainer configurationAttributes = artifact instanceof PublishArtifactLocalArtifactMetadata ? ((PublishArtifactLocalArtifactMetadata) artifact).getConfigurationAttributes() : null;
+                ((DefaultIvyArtifactName) artifactName).addAttributes(configurationAttributes);
                 resolvedArtifact = new DefaultResolvedArtifact(moduleVersionIdentifier, artifactName, artifact.getId(), artifact.getBuildDependencies(), artifactSource);
                 allResolvedArtifacts.put(artifact.getId(), resolvedArtifact);
             }

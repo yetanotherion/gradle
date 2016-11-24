@@ -18,6 +18,7 @@ package org.gradle.api.internal.artifacts.configurations
 import org.gradle.api.Action
 import org.gradle.api.Attribute
 import org.gradle.api.AttributeContainer
+import org.gradle.api.HasAttributes
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.Named
 import org.gradle.api.Project
@@ -1427,7 +1428,7 @@ All Artifacts:
     private visitedArtifacts() {
         def visitedArtifactSet = new VisitedArtifactSet() {
             @Override
-            SelectedArtifactSet select(Spec<? super Dependency> dependencySpec, AttributeContainer attributes) {
+            SelectedArtifactSet select(Spec<? super Dependency> dependencySpec) {
                 return new SelectedArtifactSet() {
                     @Override
                     def <T extends Collection<Object>> T collectBuildDependencies(T dest) {

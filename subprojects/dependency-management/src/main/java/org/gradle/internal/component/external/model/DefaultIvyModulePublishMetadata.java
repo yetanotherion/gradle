@@ -105,7 +105,7 @@ public class DefaultIvyModulePublishMetadata implements BuildableIvyModulePublis
     }
 
     @Override
-    public void addArtifacts(String configuration, Iterable<? extends PublishArtifact> artifacts) {
+    public void addArtifacts(String configuration, Iterable<? extends PublishArtifact> artifacts, AttributeContainer configurationAttributes) {
         for (PublishArtifact artifact : artifacts) {
             DefaultIvyArtifactName ivyName = DefaultIvyArtifactName.forPublishArtifact(artifact);
             DefaultIvyModuleArtifactPublishMetadata ivyArtifact = getOrCreate(ivyName);

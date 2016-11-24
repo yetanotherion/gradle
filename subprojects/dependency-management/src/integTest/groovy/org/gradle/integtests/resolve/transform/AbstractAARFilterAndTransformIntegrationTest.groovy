@@ -195,6 +195,13 @@ abstract public class AbstractAARFilterAndTransformIntegrationTest extends Abstr
         project(':$name') {
             apply plugin: 'base'
 
+            configurationAttributesSchema {
+                matchStrictly(ArtifactExtension.ATTRIBUTE)
+                matchStrictly(ArtifactName.ATTRIBUTE)
+                matchStrictly(Attribute.of(FileFormat))
+                matchStrictly(Attribute.of(ProcessingAspect))
+            }
+
             configurations {
                 compileClassesAndResources
                 runtime

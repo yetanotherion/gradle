@@ -16,6 +16,7 @@
 
 package org.gradle.internal.component.local.model;
 
+import org.gradle.api.AttributeContainer;
 import org.gradle.api.artifacts.PublishArtifact;
 import org.gradle.api.artifacts.component.ComponentArtifactIdentifier;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
@@ -28,10 +29,16 @@ import java.io.File;
 public class PublishArtifactLocalArtifactMetadata implements LocalComponentArtifactMetadata, ComponentArtifactIdentifier {
     private final ComponentIdentifier componentIdentifier;
     private final PublishArtifact publishArtifact;
+    private final AttributeContainer configurationAttributes;
 
     public PublishArtifactLocalArtifactMetadata(ComponentIdentifier componentIdentifier, PublishArtifact publishArtifact) {
+        this(componentIdentifier, publishArtifact, null);
+    }
+
+    public PublishArtifactLocalArtifactMetadata(ComponentIdentifier componentIdentifier, PublishArtifact publishArtifact, AttributeContainer configurationAttributes) {
         this.componentIdentifier = componentIdentifier;
         this.publishArtifact = publishArtifact;
+        this.configurationAttributes = configurationAttributes;
     }
 
     public String getDisplayName() {
@@ -92,5 +99,9 @@ public class PublishArtifactLocalArtifactMetadata implements LocalComponentArtif
     @Override
     public TaskDependency getBuildDependencies() {
         return publishArtifact.getBuildDependencies();
+    }
+
+    public AttributeContainer getConfigurationAttributes() {
+        return configurationAttributes;
     }
 }

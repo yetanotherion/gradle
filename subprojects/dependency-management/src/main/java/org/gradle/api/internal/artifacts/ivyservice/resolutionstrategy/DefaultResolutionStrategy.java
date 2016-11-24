@@ -16,11 +16,10 @@
 
 package org.gradle.api.internal.artifacts.ivyservice.resolutionstrategy;
 
-import com.google.common.base.Objects;
 import org.gradle.api.Action;
-import org.gradle.api.Attribute;
 import org.gradle.api.AttributeContainer;
-import org.gradle.api.Transformer;
+import org.gradle.api.AttributesSchema;
+import org.gradle.api.HasAttributes;
 import org.gradle.api.artifacts.ComponentSelection;
 import org.gradle.api.artifacts.ComponentSelectionRules;
 import org.gradle.api.artifacts.DependencyResolveDetails;
@@ -31,7 +30,6 @@ import org.gradle.api.artifacts.ResolutionStrategy;
 import org.gradle.api.artifacts.cache.ResolutionRules;
 import org.gradle.api.artifacts.transform.ArtifactTransform;
 import org.gradle.api.artifacts.transform.internal.ArtifactTransforms;
-import org.gradle.api.internal.DefaultAttributeContainer;
 import org.gradle.api.internal.artifacts.ComponentSelectionRulesInternal;
 import org.gradle.api.internal.artifacts.component.ComponentIdentifierFactory;
 import org.gradle.api.internal.artifacts.configurations.ConflictResolution;
@@ -42,11 +40,11 @@ import org.gradle.api.internal.artifacts.ivyservice.dependencysubstitution.Defau
 import org.gradle.api.internal.artifacts.ivyservice.dependencysubstitution.DependencySubstitutionRules;
 import org.gradle.api.internal.artifacts.ivyservice.dependencysubstitution.DependencySubstitutionsInternal;
 import org.gradle.internal.Actions;
+import org.gradle.internal.component.model.ComponentAttributeMatcher;
 import org.gradle.internal.rules.SpecRuleAction;
 import org.gradle.internal.typeconversion.NormalizedTimeUnit;
 import org.gradle.internal.typeconversion.TimeUnitsParser;
 
-import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -65,7 +63,6 @@ public class DefaultResolutionStrategy implements ResolutionStrategyInternal {
     private final DependencySubstitutionsInternal dependencySubstitutions;
     private final DependencySubstitutionRules globalDependencySubstitutionRules;
     private final ArtifactTransforms transforms = new ArtifactTransforms();
-    private final AttributeContainer artifactsQuery = new DefaultAttributeContainer();
     private MutationValidator mutationValidator = MutationValidator.IGNORE;
 
     private boolean assumeFluidDependencies;
@@ -93,25 +90,13 @@ public class DefaultResolutionStrategy implements ResolutionStrategyInternal {
     }
 
     @Override
-    public Transformer<File, File> getTransform(AttributeContainer from, AttributeContainer to) {
-        for (ArtifactTransforms.DependencyTransformRegistration transformReg : transforms.getTransforms()) {
-            if (matchArtifactsAttributes(transformReg.getFrom(), from) && matchArtifactsAttributes(transformReg.getTo(), to)) {
-                return transformReg.getTransformer();
-            }
-        }
-        return null;
+    public Iterable<ArtifactTransforms.DependencyTransformRegistration> getTransforms() {
+        return transforms.getTransforms();
     }
 
-    @Override
-    public boolean matchArtifactsAttributes(AttributeContainer requiredAttributes, AttributeContainer providedAttributes) {
-        for (Attribute<?> artifactAttribute : requiredAttributes.keySet()) {
-            Object valueInArtifact = requiredAttributes.getAttribute(artifactAttribute);
-            Object valueInConfiguration = providedAttributes.getAttribute(artifactAttribute);
-            if (!Objects.equal(valueInArtifact, valueInConfiguration)) {
-                return false;
-            }
-        }
-        return true;
+    private boolean matchArtifactsAttributes(AttributesSchema attributeSchema, HasAttributes candidate, AttributeContainer requiredAttributes) {
+        ComponentAttributeMatcher matcher = new ComponentAttributeMatcher(attributeSchema, null, Collections.singleton(candidate), requiredAttributes);
+        return matcher.getFullMatchs().contains(candidate);
     }
 
     @Override

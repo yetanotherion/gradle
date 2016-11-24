@@ -46,7 +46,7 @@ public class ArtifactTransforms {
         }
     }
 
-    public List<DependencyTransformRegistration> getTransforms() {
+    public Iterable<DependencyTransformRegistration> getTransforms() {
         return transforms;
     }
 

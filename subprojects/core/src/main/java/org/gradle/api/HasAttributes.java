@@ -19,8 +19,15 @@ package org.gradle.api;
 @Incubating
 public interface HasAttributes {
 
-    String getName();
-
+    /**
+     * Returns the attributes
+     */
     @Incubating
     AttributeContainer getAttributes();
+
+    /**
+     * A name for user friendly error reporting
+     */
+    @Incubating
+    String getName();
 }

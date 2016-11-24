@@ -15,8 +15,6 @@
  */
 package org.gradle.api.internal.artifacts.ivyservice;
 
-import org.gradle.api.AttributeContainer;
-import org.gradle.api.Nullable;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.LenientConfiguration;
 import org.gradle.api.artifacts.ResolveException;
@@ -32,11 +30,9 @@ import java.util.Set;
 
 public class DefaultResolvedConfiguration implements ResolvedConfiguration {
     private final DefaultLenientConfiguration configuration;
-    private final AttributeContainer attributes;
 
-    public DefaultResolvedConfiguration(DefaultLenientConfiguration configuration, @Nullable AttributeContainer attributes) {
+    public DefaultResolvedConfiguration(DefaultLenientConfiguration configuration) {
         this.configuration = configuration;
-        this.attributes = attributes;
     }
 
     public boolean hasError() {
@@ -58,7 +54,7 @@ public class DefaultResolvedConfiguration implements ResolvedConfiguration {
 
     public Set<File> getFiles(final Spec<? super Dependency> dependencySpec) throws ResolveException {
         rethrowFailure();
-        return configuration.select(dependencySpec, attributes).collectFiles(new LinkedHashSet<File>());
+        return configuration.select(dependencySpec).collectFiles(new LinkedHashSet<File>());
     }
 
     public Set<ResolvedDependency> getFirstLevelModuleDependencies() throws ResolveException {
@@ -74,7 +70,7 @@ public class DefaultResolvedConfiguration implements ResolvedConfiguration {
     public Set<ResolvedArtifact> getResolvedArtifacts() throws ResolveException {
         rethrowFailure();
         ArtifactCollectingVisitor visitor = new ArtifactCollectingVisitor();
-        configuration.select(Specs.<Dependency>satisfyAll(), attributes).visitArtifacts(visitor);
+        configuration.select(Specs.<Dependency>satisfyAll()).visitArtifacts(visitor);
         return visitor.artifacts;
     }
 }

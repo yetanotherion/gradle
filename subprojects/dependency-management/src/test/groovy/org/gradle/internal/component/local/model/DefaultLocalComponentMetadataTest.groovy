@@ -132,7 +132,7 @@ class DefaultLocalComponentMetadataTest extends Specification {
     }
 
     def addArtifact(String configuration, PublishArtifact publishArtifact) {
-        metadata.addArtifacts(configuration, new DefaultPublishArtifactSet("arts", WrapUtil.toDomainObjectSet(PublishArtifact, publishArtifact), TestFiles.fileCollectionFactory()))
+        metadata.addArtifacts(configuration, new DefaultPublishArtifactSet("arts", WrapUtil.toDomainObjectSet(PublishArtifact, publishArtifact), TestFiles.fileCollectionFactory()), configuration.getAttributes())
     }
 
     def "can add artifact to several configurations"() {

@@ -59,7 +59,7 @@ public class DefaultConfigurationComponentMetaDataBuilder implements Configurati
 
     private void addArtifacts(BuildableLocalComponentMetadata metaData, Collection<? extends Configuration> configurations) {
         for (Configuration configuration : configurations) {
-            metaData.addArtifacts(configuration.getName(), configuration.getArtifacts());
+            metaData.addArtifacts(configuration.getName(), configuration.getArtifacts(), configuration.getAttributes());
         }
     }
 }

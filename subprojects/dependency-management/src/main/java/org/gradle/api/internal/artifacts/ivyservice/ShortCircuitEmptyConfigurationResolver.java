@@ -15,7 +15,6 @@
  */
 package org.gradle.api.internal.artifacts.ivyservice;
 
-import org.gradle.api.AttributeContainer;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.LenientConfiguration;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
@@ -93,7 +92,7 @@ public class ShortCircuitEmptyConfigurationResolver implements ConfigurationReso
 
     private static class EmptyResults implements VisitedArtifactSet, SelectedArtifactSet {
         @Override
-        public SelectedArtifactSet select(Spec<? super Dependency> dependencySpec, AttributeContainer attributes) {
+        public SelectedArtifactSet select(Spec<? super Dependency> dependencySpec) {
             return this;
         }
 

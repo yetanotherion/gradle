@@ -27,7 +27,7 @@ public interface BuildableLocalComponentMetadata {
     /**
      * Adds some artifacts to this component. Artifacts are attached to the given configuration and each of its children.
      */
-    void addArtifacts(String configuration, Iterable<? extends PublishArtifact> artifacts);
+    void addArtifacts(String configuration, Iterable<? extends PublishArtifact> artifacts, AttributeContainer configurationAttributes);
 
     /**
      * Adds a configuration to this component.

@@ -63,9 +63,9 @@ public class DefaultLocalComponentMetadata implements LocalComponentMetadata, Bu
         return id;
     }
 
-    public void addArtifacts(String configuration, Iterable<? extends PublishArtifact> artifacts) {
+    public void addArtifacts(String configuration, Iterable<? extends PublishArtifact> artifacts, AttributeContainer configurationAttributes) {
         for (PublishArtifact artifact : artifacts) {
-            ComponentArtifactMetadata artifactMetadata = new PublishArtifactLocalArtifactMetadata(componentIdentifier, artifact);
+            ComponentArtifactMetadata artifactMetadata = new PublishArtifactLocalArtifactMetadata(componentIdentifier, artifact, configurationAttributes);
             addArtifact(configuration, artifactMetadata);
         }
     }

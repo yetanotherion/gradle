@@ -56,6 +56,11 @@ public interface AttributeContainerInternal extends AttributeContainer {
         public AttributeContainer asImmutable() {
             return this;
         }
+
+        @Override
+        public AttributeContainer copy() {
+            return new DefaultAttributeContainer();
+        }
     };
 
     /**
@@ -65,4 +70,5 @@ public interface AttributeContainerInternal extends AttributeContainer {
      */
     AttributeContainer asImmutable();
 
+    AttributeContainer copy();
 }

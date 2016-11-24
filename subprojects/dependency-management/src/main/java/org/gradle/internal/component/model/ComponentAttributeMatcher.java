@@ -39,7 +39,7 @@ public class ComponentAttributeMatcher {
     private final AttributeContainer requestedAttributesContainer;
 
     public ComponentAttributeMatcher(AttributesSchema consumerAttributeSchema, AttributesSchema producerAttributeSchema,
-                                     Iterable<HasAttributes> candidates, //configAttributes + artifactAttributes
+                                     Iterable<HasAttributes> candidates,
                                      AttributeContainer requestedAttributesContainer) {
         this.consumerAttributeSchema = consumerAttributeSchema;
         this.producerAttributeSchema = producerAttributeSchema;

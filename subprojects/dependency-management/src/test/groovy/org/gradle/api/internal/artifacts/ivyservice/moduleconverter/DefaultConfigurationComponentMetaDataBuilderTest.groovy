@@ -60,8 +60,8 @@ class DefaultConfigurationComponentMetaDataBuilderTest extends Specification {
         then:
         _ * metaData.addConfiguration("config1", '', emptySet, emptySet, false, false, _, false, false)
         _ * metaData.addConfiguration("config2", '', emptySet, emptySet, false, false, _, false, false)
-        1 * metaData.addArtifacts("config1", artifacts1)
-        1 * metaData.addArtifacts("config2", artifacts2)
+        1 * metaData.addArtifacts("config1", artifacts1, null)
+        1 * metaData.addArtifacts("config2", artifacts2, null)
         0 * metaData._
     }
 

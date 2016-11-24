@@ -94,9 +94,12 @@ allprojects {
             }
 
             project(':app') {
+                configurationAttributesSchema {
+                    matchStrictly(AttributeExtension.ATTRIBUTE)
+                }
                 configurations {
                     compile {
-                        format = 'jar'
+                        attribute(FileExtension.ATTRIBUTE, new FileExtension('jar'))
                     }
                 }
 
@@ -108,7 +111,7 @@ allprojects {
                     inputs.files configurations.compile
                     doLast {
                         assert configurations.compile.incoming.artifacts.collect { it.file.name } == ['lib-util.jar', 'lib.jar', 'some-jar-1.0.jar']
-                        
+
                         // These do not include files from file dependencies
                         assert configurations.compile.resolvedConfiguration.resolvedArtifacts.collect { it.file.name } == ['lib.jar', 'some-jar-1.0.jar']
                         assert configurations.compile.resolvedConfiguration.lenientConfiguration.artifacts.collect { it.file.name } == ['lib.jar', 'some-jar-1.0.jar']
@@ -170,9 +173,12 @@ allprojects {
             }
 
             project(':app') {
+                configurationAttributesSchema {
+                    matchStrictly(AttributeExtension.ATTRIBUTE)
+                }
                 configurations {
                     compile {
-                        format = 'jar'
+                        attribute(FileExtension.ATTRIBUTE, new AttributeExtension('jar'))
                     }
                 }
 

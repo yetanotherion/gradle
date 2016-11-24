@@ -35,6 +35,8 @@ allprojects {
     }
 }
 
+${configurationAttributesSchema()}
+
 class FileSizer extends ArtifactTransform {
     private File output
 
@@ -70,6 +72,7 @@ class FileSizer extends ArtifactTransform {
             repositories {
                 maven { url "${mavenRepo.uri}" }
             }
+            ${configurationAttributesSchema()}
             dependencies {
                 compile 'test:test:1.3'
                 compile 'test:test2:2.3'
@@ -139,6 +142,7 @@ class FileSizer extends ArtifactTransform {
             }
 
             project(':app') {
+                ${configurationAttributesSchema()}
 
                 dependencies {
                     compile project(':lib')
@@ -184,6 +188,7 @@ class FileSizer extends ArtifactTransform {
             }
 
             project(':app') {
+                ${configurationAttributesSchema()}
                 dependencies {
                     compile project(':lib')
                 }
@@ -218,6 +223,7 @@ class FileSizer extends ArtifactTransform {
             }
 
             project(':app') {
+                ${configurationAttributesSchema()}
                 dependencies {
                     compile project(':lib')
                 }
@@ -299,6 +305,7 @@ class FileSizer extends ArtifactTransform {
             }
 
             project(':app') {
+                ${configurationAttributesSchema()}
                 dependencies {
                     compile project(':lib')
                 }
@@ -478,6 +485,15 @@ class FileSizer extends ArtifactTransform {
         then:
         failure.assertHasCause("Error while transforming 'a.jar' to match attributes '{artifactExtension=size}' using 'ToNullTransform'")
         failure.assertHasCause("Expected output file 'this_file_does_not.exist' was not created")
+    }
+
+    def configurationAttributesSchema() {
+        """
+        configurationAttributesSchema {
+            matchStrictly(ArtifactExtension.ATTRIBUTE)
+            matchStrictly(ArtifactName.ATTRIBUTE)
+        }
+        """
     }
 
     def configurationAndTransform(String transformImplementation) {

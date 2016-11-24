@@ -26,6 +26,7 @@ import org.gradle.api.artifacts.attributes.ArtifactExtension;
 import org.gradle.api.artifacts.attributes.ArtifactName;
 import org.gradle.api.artifacts.attributes.ArtifactType;
 import org.gradle.api.internal.DefaultAttributeContainer;
+import org.gradle.internal.Cast;
 import org.gradle.util.GUtil;
 
 import static com.google.common.base.Objects.equal;
@@ -130,8 +131,17 @@ public class DefaultIvyArtifactName implements IvyArtifactName {
         return classifier;
     }
 
-    @Override
     public AttributeContainer getAttributes() {
         return attributes;
+    }
+
+    public void addAttributes(@Nullable AttributeContainer attributes) {
+        if (attributes == null) {
+            return;
+        }
+        for (Attribute<?> attribute : attributes.keySet()) {
+            Attribute<Object> castAttribute = Cast.uncheckedCast(attribute);
+            this.attributes.attribute(castAttribute, attributes.getAttribute(castAttribute));
+        }
     }
 }

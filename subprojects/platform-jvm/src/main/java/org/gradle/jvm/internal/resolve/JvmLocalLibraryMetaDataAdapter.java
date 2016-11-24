@@ -70,7 +70,7 @@ public class JvmLocalLibraryMetaDataAdapter implements LocalLibraryMetaDataAdapt
         for (Map.Entry<UsageKind, List<PublishArtifact>> entry : artifacts.entrySet()) {
             UsageKind usage = entry.getKey();
             List<PublishArtifact> publishArtifacts = entry.getValue();
-            metadata.addArtifacts(usage.getConfigurationName(), publishArtifacts);
+            metadata.addArtifacts(usage.getConfigurationName(), publishArtifacts, null);
         }
         return metadata;
     }

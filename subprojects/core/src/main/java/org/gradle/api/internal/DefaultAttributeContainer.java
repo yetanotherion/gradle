@@ -96,4 +96,14 @@ public class DefaultAttributeContainer implements AttributeContainerInternal {
         return new ImmutableAttributes(attributes);
     }
 
+    public DefaultAttributeContainer copy() {
+        DefaultAttributeContainer container = new DefaultAttributeContainer();
+        if (this.attributes == null) {
+            return container;
+        }
+        container.ensureAttributes();
+        container.attributes.putAll(this.attributes);
+        return container;
+    }
+
 }

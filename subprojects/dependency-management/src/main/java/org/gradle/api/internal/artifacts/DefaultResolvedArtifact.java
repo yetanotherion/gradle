@@ -24,6 +24,7 @@ import org.gradle.api.artifacts.component.ComponentArtifactIdentifier;
 import org.gradle.api.internal.artifacts.ivyservice.dynamicversions.DefaultResolvedModuleVersion;
 import org.gradle.api.tasks.TaskDependency;
 import org.gradle.internal.Factory;
+import org.gradle.internal.component.model.DefaultIvyArtifactName;
 import org.gradle.internal.component.model.IvyArtifactName;
 
 import java.io.File;
@@ -97,7 +98,7 @@ public class DefaultResolvedArtifact implements ResolvedArtifact, Buildable {
     }
 
     public AttributeContainer getAttributes() {
-        return artifact.getAttributes();
+        return ((DefaultIvyArtifactName) artifact).getAttributes();
     }
 
     public File getFile() {
