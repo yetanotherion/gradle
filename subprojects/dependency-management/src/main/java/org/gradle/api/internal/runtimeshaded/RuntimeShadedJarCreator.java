@@ -21,10 +21,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import org.gradle.api.GradleException;
-import org.gradle.api.UncheckedIOException;
-import org.gradle.api.file.FileVisitDetails;
-import org.gradle.api.file.FileVisitor;
-import org.gradle.api.internal.file.collections.DirectoryFileTree;
 import org.gradle.internal.ErroringAction;
 import org.gradle.internal.IoActions;
 import org.gradle.internal.UncheckedException;
@@ -162,7 +158,7 @@ class RuntimeShadedJarCreator {
             if (file.getName().endsWith(".jar")) {
                 processJarFile(outputStream, file, buffer, seenPaths, services);
             } else {
-                processDirectory(outputStream, file, buffer, seenPaths, services);
+                throw new GradleException("Only jars are supported!");
             }
 
             progressFormatter.increment();
@@ -184,40 +180,6 @@ class RuntimeShadedJarCreator {
 
     private void writeIdentifyingMarkerFile(ZipOutputStream outputStream) throws IOException {
         writeEntry(outputStream, GradleRuntimeShadedJarDetector.MARKER_FILENAME, new byte[0]);
-    }
-
-    /**
-     * Processing a directory is not yet reproducible - i.e. it can yield different results on different machines because the order how the files are read
-     * from disk is not predictable.
-     * Since this is currently only used in tests this is fine for now.
-     */
-    private void processDirectory(final ZipOutputStream outputStream, File file, final byte[] buffer, final HashSet<String> seenPaths, final Map<String, List<String>> services) {
-        new DirectoryFileTree(file).visit(new FileVisitor() {
-            @Override
-            public void visitDir(FileVisitDetails dirDetails) {
-                try {
-                    ZipEntry zipEntry = newZipEntryWithFixedTime(dirDetails.getPath() + "/");
-                    processEntry(outputStream, null, zipEntry, buffer, seenPaths, services);
-                } catch (IOException e) {
-                    throw new UncheckedIOException(e);
-                }
-            }
-
-            @Override
-            public void visitFile(FileVisitDetails fileDetails) {
-                try {
-                    ZipEntry zipEntry = newZipEntryWithFixedTime(fileDetails.getPath());
-                    InputStream inputStream = fileDetails.open();
-                    try {
-                        processEntry(outputStream, inputStream, zipEntry, buffer, seenPaths, services);
-                    } finally {
-                        inputStream.close();
-                    }
-                } catch (IOException e) {
-                    throw new UncheckedIOException(e);
-                }
-            }
-        });
     }
 
     private void processJarFile(final ZipOutputStream outputStream, File file, final byte[] buffer, final Set<String> seenPaths, final Map<String, List<String>> services) throws IOException {

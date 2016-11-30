@@ -56,26 +56,6 @@ class RuntimeShadedJarCreatorTest extends Specification {
     def relocatedJarCreator = new RuntimeShadedJarCreator(progressLoggerFactory, new ImplementationDependencyRelocator(RuntimeShadedJarType.API))
     def outputJar = new File(tmpDir.testDirectory, 'gradle-api.jar')
 
-    def "creates JAR file for input directory"() {
-        given:
-        def inputFilesDir = tmpDir.createDir('inputFiles')
-        writeClass(inputFilesDir, "org/gradle/MyClass")
-
-        when:
-        relocatedJarCreator.create(outputJar, [inputFilesDir])
-
-        then:
-        1 * progressLoggerFactory.newOperation(RuntimeShadedJarCreator) >> progressLogger
-        1 * progressLogger.setDescription('Gradle JARs generation')
-        1 * progressLogger.setLoggingHeader("Generating JAR file '$outputJar.name'")
-        1 * progressLogger.started()
-        (1 + ADDITIONAL_PROGRESS_STEPS) * progressLogger.progress(_)
-        1 * progressLogger.completed()
-        TestFile[] contents = tmpDir.testDirectory.listFiles().findAll { it.isFile() }
-        contents.length == 1
-        contents[0] == outputJar
-    }
-
     def "creates fat JAR file for multiple input JAR files"() {
         given:
         def className = 'org/gradle/MyClass'
