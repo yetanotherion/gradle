@@ -1,0 +1,201 @@
+initscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies.classpath "org.fusesource.jansi:jansi:1.14"
+}
+
+import org.fusesource.jansi.AnsiConsole
+import org.gradle.internal.logging.LoggingOutputInternal
+import org.gradle.internal.logging.events.*
+
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.regex.Matcher
+import java.util.regex.Pattern
+
+class GradleTextAreaOutputEventListener implements OutputEventListener {
+    // TODO: consider concurrent linked list impl or ConcurrentSkipListSet
+    // Store List of Started progress events
+    private BuildStatus buildStatus = new BuildStatus("Initializing", 0)
+    def buildOperationStatuses = new ConcurrentHashMap<OperationIdentifier, BuildOperationStatus>()
+    private final Object lock = new Object()
+
+    private final ScheduledExecutorService executor
+    private final Integer numOutputRows
+
+    // ansi escape codes for color
+    public static final String ANSI_RESET_COLOR = "\u001b[0m";
+    public static final String ANSI_FG_BLACK = "\u001b[30m";
+    public static final String ANSI_FG_RED = "\u001b[31m";
+    public static final String ANSI_FG_GREEN = "\u001b[32m";
+    public static final String ANSI_FG_WHITE = "\u001b[37m";
+    public static final String ANSI_BG_BLACK = "\u001b[40m"
+    public static final String ANSI_BG_GREEN = "\u001b[42m"
+
+    // ansi escape codes for cursor movement
+    public static final String ANSI_START_OF_LINE = "\u001b[1000D";
+    public static final String ANSI_MOVE_UP = "\u001b[1A";
+    public static final String ANSI_MOVE_DOWN = "\u001b[1B";
+    public static final String ANSI_MOVE_RIGHT = "\u001b[1C";
+    public static final String ANSI_MOVE_LEFT = "\u001b[1D";
+    public static final String ANSI_SAVE_CURSOR_POSITION = "\u001b[s";
+    public static final String ANSI_RETURN_TO_SAVED_POSITION = "\u001b[u";
+
+    // ansi escape codes for clearing
+    public static final String ANSI_CLEAR_TO_END_OF_LINE = "\u001b[K";
+
+    private static final Pattern STATUS_PATTERN = Pattern.compile('(\\d+)% (\\w+)')
+    private static final Pattern ALTERNATE_STATUS_PATTERN = Pattern.compile('(\\w+) (\\d+)%')
+
+    public GradleTextAreaOutputEventListener(Integer maxRowsIn) {
+        this.executor = Executors.newSingleThreadScheduledExecutor()
+        this.numOutputRows = maxRowsIn
+        // Make sure we have space to draw textarea
+        AnsiConsole.systemInstall();
+        System.out.print(ANSI_SAVE_CURSOR_POSITION)
+        System.out.print("\n" * numOutputRows)
+        cursorToTopLeft()
+    }
+
+    static void cursorToTopLeft() {
+        writeToLog('cursorToTopLeft()')
+        System.out.print(ANSI_RETURN_TO_SAVED_POSITION)
+    }
+
+    static void cursorToBeginningOfNextLine() {
+        System.out.print(ANSI_START_OF_LINE)
+        System.out.print(ANSI_MOVE_DOWN)
+    }
+
+    static void writeToTerminal(String str) {
+        System.out.print(str)
+        System.out.print(ANSI_CLEAR_TO_END_OF_LINE)
+        cursorToBeginningOfNextLine()
+    }
+
+    static void writeToLog(String str) {
+        //System.err.println(str)
+    }
+
+    void writeStatusLine(BuildStatus status) {
+        final int maxWidth = 50
+        final int completedWidth = Math.floor(maxWidth / 100 * status.percentComplete)
+
+        System.out.print(ANSI_FG_BLACK)
+        System.out.print(ANSI_BG_GREEN)
+        System.out.print(" " * completedWidth)
+        System.out.print(ANSI_FG_WHITE)
+        System.out.print(ANSI_BG_BLACK)
+        System.out.print(" " * (maxWidth - completedWidth))
+        System.out.print(ANSI_RESET_COLOR)
+        System.out.print(" $status.percentComplete% $status.status")
+        System.out.print(ANSI_CLEAR_TO_END_OF_LINE)
+    }
+
+    void updateBuildStatus() {
+        writeToLog("updateBuildStatus()")
+        cursorToTopLeft()
+        writeStatusLine(buildStatus)
+        cursorToBeginningOfNextLine()
+
+        buildOperationStatuses.values()
+                .collect { it.toString() }
+                .plus(["\n"] * (numOutputRows - 1))
+                .take(numOutputRows - 1)
+                .each { writeToTerminal(it) }
+
+        cursorToTopLeft()
+    }
+
+    void printBuildResult() {
+        cursorToTopLeft()
+        System.out.print(ANSI_FG_GREEN)
+        System.out.print("BUILD SUCCESS")
+        System.out.print(ANSI_RESET_COLOR)
+        System.out.print(ANSI_CLEAR_TO_END_OF_LINE)
+    }
+
+    void onOutput(OutputEvent e) {
+        // synchronized (lock) { // TODO: executor.schedule() updates every 100ms
+        if (e instanceof EndOutputEvent) {
+            buildOperationStatuses.clear()
+            printBuildResult()
+        } else if (e instanceof ProgressStartEvent && e != null) {
+            if (e.shortDescription?.toString()?.startsWith("Building")) {
+                buildStatus = new BuildStatus("Building", 0)
+            } else {
+                // Child Status replaces parent in buildOperationStatuses map with a reference to parent operation
+                BuildOperationStatus parent = null
+                if (e.parentId != null) {
+                    parent = buildOperationStatuses.remove(e.parentId)
+                }
+                BuildOperationStatus bos = new BuildOperationStatus(e.operationId, e.status, e.shortDescription, parent)
+                buildOperationStatuses.put(e.operationId, bos)
+            }
+            updateBuildStatus()
+        } else if (e instanceof ProgressEvent) {
+            Matcher m = STATUS_PATTERN.matcher(e.status)
+            Matcher am = ALTERNATE_STATUS_PATTERN.matcher(e.status)
+            if (m.matches()) {
+                buildStatus = new BuildStatus(m[0][2].toString(), Integer.parseInt(m[0][1].toString()))
+            } else if (am.matches()) {
+                buildStatus = new BuildStatus(am[0][1].toString(), Integer.parseInt(am[0][2].toString()))
+            } else if (buildOperationStatuses.containsKey(e.operationId)) {
+                def bos = buildOperationStatuses.get(e.operationId)
+                bos.status = e.status
+                buildOperationStatuses.put(e.operationId, bos)
+            }
+            updateBuildStatus()
+        } else if (e instanceof ProgressCompleteEvent) {
+            if (buildOperationStatuses.containsKey(e.operationId)) {
+                buildOperationStatuses.remove(e.operationId)
+            }
+
+            if (buildOperationStatuses.isEmpty() && buildStatus.status == "Building") {
+                printBuildResult()
+            } else {
+                updateBuildStatus()
+            }
+        }
+    }
+
+    private class BuildStatus {
+        String status
+        Integer percentComplete
+
+        BuildStatus(String status, Integer percentComplete) {
+            this.status = status
+            this.percentComplete = percentComplete
+        }
+    }
+
+    private class BuildOperationStatus {
+        OperationIdentifier id
+        String status
+        String shortDescription
+        BuildOperationStatus parent
+
+        BuildOperationStatus(OperationIdentifier id, String status, String shortDescription, BuildOperationStatus parent) {
+            this.id = id
+            this.status = status
+            this.shortDescription = shortDescription
+            this.parent = parent
+        }
+
+        String toString() {
+            String output = " > " + (shortDescription ?: status)
+
+            BuildOperationStatus current = parent
+            while (current != null) {
+                output = current.toString() + output
+                current = current.parent
+            }
+
+            return output
+        }
+    }
+}
+
+gradle.services.get(LoggingOutputInternal).addOutputEventListener(new GradleTextAreaOutputEventListener(5))

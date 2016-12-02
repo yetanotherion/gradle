@@ -38,7 +38,7 @@ public class BuildResultLogger extends BuildAdapter {
     }
 
     public void buildFinished(BuildResult result) {
-        StyledTextOutput textOutput = textOutputFactory.create(BuildResultLogger.class, LogLevel.LIFECYCLE);
+        StyledTextOutput textOutput = textOutputFactory.create(BuildResultLogger.class, LogLevel.QUIET);
         textOutput.println();
         String action = result.getAction().toUpperCase();
         if (result.getFailure() == null) {
@@ -46,8 +46,6 @@ public class BuildResultLogger extends BuildAdapter {
         } else {
             textOutput.withStyle(Failure).text(action + " FAILED");
         }
-        textOutput.println();
-        textOutput.println();
-        textOutput.formatln("Total time: %s", buildTimeClock.getElapsed());
+        textOutput.formatln(" > %s", buildTimeClock.getElapsed());
     }
 }

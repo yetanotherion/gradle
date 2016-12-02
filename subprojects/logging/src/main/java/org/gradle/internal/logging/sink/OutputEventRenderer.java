@@ -20,15 +20,16 @@ import net.jcip.annotations.ThreadSafe;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.StandardOutputListener;
 import org.gradle.api.logging.configuration.ConsoleOutput;
-import org.gradle.internal.time.TrueTimeProvider;
 import org.gradle.internal.event.ListenerBroadcast;
 import org.gradle.internal.logging.config.LoggingRouter;
 import org.gradle.internal.logging.console.AnsiConsole;
 import org.gradle.internal.logging.console.ColorMap;
 import org.gradle.internal.logging.console.Console;
+import org.gradle.internal.logging.console.ConsoleBackedParallelStatusRenderer;
 import org.gradle.internal.logging.console.ConsoleBackedProgressRenderer;
 import org.gradle.internal.logging.console.DefaultColorMap;
 import org.gradle.internal.logging.console.DefaultStatusBarFormatter;
+import org.gradle.internal.logging.console.ProgressBarParallelStatusAnsiConsole;
 import org.gradle.internal.logging.console.StyledTextOutputBackedRenderer;
 import org.gradle.internal.logging.events.EndOutputEvent;
 import org.gradle.internal.logging.events.LogLevelChangeEvent;
@@ -38,6 +39,7 @@ import org.gradle.internal.logging.text.StreamBackedStandardOutputListener;
 import org.gradle.internal.logging.text.StreamingStyledTextOutput;
 import org.gradle.internal.nativeintegration.console.ConsoleMetaData;
 import org.gradle.internal.nativeintegration.console.FallbackConsoleMetaData;
+import org.gradle.internal.time.TrueTimeProvider;
 
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -60,6 +62,7 @@ public class OutputEventRenderer implements OutputEventListener, LoggingRouter {
     private StreamBackedStandardOutputListener stdOutListener;
     private StreamBackedStandardOutputListener stdErrListener;
     private OutputEventListener console;
+    private final boolean newHotness;
 
     public OutputEventRenderer() {
         OutputEventListener stdOutChain = onNonError(new ProgressLogEventGenerator(new StyledTextOutputBackedRenderer(new StreamingStyledTextOutput(stdoutListeners.getSource())), false));
@@ -67,6 +70,7 @@ public class OutputEventRenderer implements OutputEventListener, LoggingRouter {
         OutputEventListener stdErrChain = onError(new ProgressLogEventGenerator(new StyledTextOutputBackedRenderer(new StreamingStyledTextOutput(stderrListeners.getSource())), false));
         formatters.add(stdErrChain);
         this.consoleConfigureAction = new ConsoleConfigureAction();
+        newHotness = Boolean.getBoolean("org.gradle.console.hotness");
     }
 
     @Override
@@ -119,7 +123,12 @@ public class OutputEventRenderer implements OutputEventListener, LoggingRouter {
     public void attachAnsiConsole(OutputStream outputStream) {
         synchronized (lock) {
             OutputStreamWriter writer = new OutputStreamWriter(outputStream);
-            Console console = new AnsiConsole(writer, writer, colourMap, true);
+            Console console;
+            if (newHotness) {
+                console = new ProgressBarParallelStatusAnsiConsole(writer, colourMap);
+            } else {
+                console = new AnsiConsole(writer, writer, colourMap, true);
+            }
             addConsole(console, true, true, new FallbackConsoleMetaData());
         }
     }
@@ -182,12 +191,22 @@ public class OutputEventRenderer implements OutputEventListener, LoggingRouter {
     }
 
     public OutputEventRenderer addConsole(Console console, boolean stdout, boolean stderr, ConsoleMetaData consoleMetaData) {
-        final OutputEventListener consoleChain = new ConsoleBackedProgressRenderer(
-            new ProgressLogEventGenerator(
-                new StyledTextOutputBackedRenderer(console.getMainArea()), true),
-            console,
-            new DefaultStatusBarFormatter(consoleMetaData),
-            new TrueTimeProvider());
+        final OutputEventListener consoleChain;
+        if (newHotness) {
+            consoleChain = new ConsoleBackedParallelStatusRenderer(
+                new ProgressLogEventGenerator(new StyledTextOutputBackedRenderer(console.getMainArea()), true),
+                console,
+                new DefaultStatusBarFormatter(consoleMetaData),
+                new TrueTimeProvider());
+        } else {
+            consoleChain = new ConsoleBackedProgressRenderer(
+                new ProgressLogEventGenerator(
+                    new StyledTextOutputBackedRenderer(console.getMainArea()), true),
+                console,
+                new DefaultStatusBarFormatter(consoleMetaData),
+                new TrueTimeProvider());
+        }
+
         synchronized (lock) {
             if (stdout && stderr) {
                 this.console = consoleChain;

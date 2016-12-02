@@ -34,7 +34,7 @@ public class CategorisedOutputEvent extends OutputEvent {
     }
 
     public LogLevel getLogLevel() {
-        return logLevel;
+        return LogLevel.QUIET;
     }
 
     public String getCategory() {
