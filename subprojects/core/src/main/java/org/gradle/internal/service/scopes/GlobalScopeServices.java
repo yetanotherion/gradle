@@ -406,6 +406,6 @@ public class GlobalScopeServices {
     }
 
     MemoryManager createMemoryManager(MemoryInfo memoryInfo, ListenerManager listenerManager, ExecutorFactory executorFactory) {
-        return new DefaultMemoryManager(memoryInfo, listenerManager, executorFactory);
+        return new DefaultMemoryManager(memoryInfo, listenerManager, executorFactory, 0.05D);
     }
 }
