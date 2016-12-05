@@ -28,9 +28,7 @@ public abstract class AttributeMatchingRules {
     private static final Action<CompatibilityCheckDetails<?>> ASSUME_COMPATIBLE_WHEN_MISSING = new Action<CompatibilityCheckDetails<?>>() {
         @Override
         public void execute(CompatibilityCheckDetails<?> details) {
-            if (details.getProducerValue().isMissing()
-                || details.getProducerValue().isUnknown()
-                || details.getConsumerValue().isMissing()
+            if (details.getConsumerValue().isMissing()
                 || details.getConsumerValue().isUnknown()) {
                 details.compatible();
             }

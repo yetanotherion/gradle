@@ -138,6 +138,11 @@ class FileSizer extends ArtifactTransform {
                 artifacts {
                     compile jar1, jar2
                 }
+                configurations {
+                    compile {
+                        attributes artifactType: 'size'
+                    }
+                }
             }
 
             project(':app') {
@@ -182,6 +187,11 @@ class FileSizer extends ArtifactTransform {
                 }
                 artifacts {
                     compile file2, jar2
+                }
+                configurations {
+                    compile {
+                        attributes artifactType: 'size'
+                    }
                 }
             }
 
@@ -384,6 +394,11 @@ class FileSizer extends ArtifactTransform {
                 artifacts {
                     compile txt, jar
                 }
+                configurations {
+                    compile {
+                        attributes artifactType: 'size'
+                    }
+                }
             }
 
             project(':app') {
@@ -450,6 +465,11 @@ class FileSizer extends ArtifactTransform {
                 }
                 artifacts {
                     compile jar1
+                }
+                configurations {
+                    compile {
+                        attributes artifactType: 'size'
+                    }
                 }
             }
 
