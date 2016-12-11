@@ -19,6 +19,7 @@ package org.gradle.internal.classloader;
 import org.gradle.internal.classpath.ClassPath;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
@@ -36,7 +37,11 @@ public class VisitableURLClassLoader extends URLClassLoader implements ClassLoad
         try {
             Method m = ClassLoader.class.getMethod("registerAsParallelCapable");
             m.invoke(null);
-        } catch (ReflectiveOperationException e) {
+        } catch (InvocationTargetException e) {
+            // Ignored, we are simply running an old Java version
+        } catch (IllegalAccessException e) {
+            // Ignored, we are simply running an old Java version
+        } catch (NoSuchMethodException e) {
             // Ignored, we are simply running an old Java version
         }
     }
