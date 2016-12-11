@@ -18,6 +18,7 @@ package org.gradle.internal.classloader;
 
 import org.gradle.internal.classpath.ClassPath;
 
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
@@ -28,9 +29,16 @@ public class VisitableURLClassLoader extends URLClassLoader implements ClassLoad
     static {
         /*
          * This classloader is thread-safe and URLClassLoader is parallel capable,
-         * so register as such to reduce contention when running multithreaded builds
+         * so register as such to reduce contention when running multithreaded builds.
+         * We do so through relfection since Gradle should print error messages when
+         * run with older JRE versions
         */
-        ClassLoader.registerAsParallelCapable();
+        try {
+            Method m = ClassLoader.class.getMethod("registerAsParallelCapable");
+            m.invoke(null);
+        } catch (ReflectiveOperationException e) {
+            // Ignored, we are simply running an old Java version
+        }
     }
 
     public VisitableURLClassLoader(ClassLoader parent, Collection<URL> urls) {
