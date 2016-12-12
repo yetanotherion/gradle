@@ -24,6 +24,8 @@ import org.gradle.internal.classpath.ClassPath;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.security.CodeSource;
 import java.security.cert.Certificate;
@@ -34,9 +36,19 @@ public abstract class TransformingClassLoader extends VisitableURLClassLoader {
         /*
          * This classloader is thread-safe and VisitableURLClassLoader is parallel capable,
          * so register as such to reduce contention when running multithreaded builds.
-         * Notice, concrete classes extending this one still need to register as parallel capable
+         * We do so through relfection since Gradle should print error messages when
+         * run with older JRE versions
         */
-        ClassLoader.registerAsParallelCapable();
+        try {
+            Method m = ClassLoader.class.getMethod("registerAsParallelCapable");
+            m.invoke(null);
+        } catch (InvocationTargetException e) {
+            // Ignored, we are simply running an old Java version
+        } catch (IllegalAccessException e) {
+            // Ignored, we are simply running an old Java version
+        } catch (NoSuchMethodException e) {
+            // Ignored, we are simply running an old Java version
+        }
     }
 
     public TransformingClassLoader(ClassLoader parent, ClassPath classPath) {
