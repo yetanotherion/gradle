@@ -71,6 +71,24 @@ public class IdeaDependenciesProviderTest extends AbstractProjectBuilderSpec {
         assertSingleLibrary(result, 'TEST', 'mockito.jar')
     }
 
+    def "api dependencies are mapped to compile scope"() {
+        applyPluginToProjects()
+        project.apply(plugin: 'java-library')
+
+        def module = project.ideaModule.module // Mock(IdeaModule)
+        module.offline = true
+
+        when:
+        project.dependencies.add('api', project.files('lib/guava.jar'))
+        project.dependencies.add('testCompile', project.files('lib/mockito.jar'))
+        def result = dependenciesProvider.provide(module)
+
+        then:
+        result.size() == 2
+        assertSingleLibrary(result, 'COMPILE', 'guava.jar')
+        assertSingleLibrary(result, 'TEST', 'mockito.jar')
+    }
+
     def "dependency is excluded if added to minus configuration"() {
         applyPluginToProjects()
         project.apply(plugin: 'java')
@@ -146,6 +164,64 @@ public class IdeaDependenciesProviderTest extends AbstractProjectBuilderSpec {
         result.findAll { it.scope == 'COMPILE' }.size() == 1
     }
 
+    def "api dependency on child project is mapped to compile scope"() {
+        applyPluginToProjects()
+        project.apply(plugin: 'java-library')
+        childProject.apply(plugin: 'java')
+
+        def module = project.ideaModule.module // Mock(IdeaModule)
+        module.offline = true
+
+        when:
+        project.dependencies.add('api', childProject)
+        def result = dependenciesProvider.provide(module)
+
+        then:
+        result.size() == 1
+        result.findAll { it.scope == 'COMPILE' }.size() == 1
+    }
+
+    def "implementation dependency of child project is not mapped to compile scope"() {
+        applyPluginToProjects()
+        project.apply(plugin: 'java')
+        childProject.apply(plugin: 'java-library')
+        def child2Project = TestUtil.createChildProject(project, "child2", new File("."))
+        child2Project.apply(plugin: 'java-library')
+
+        def module = project.ideaModule.module // Mock(IdeaModule)
+        module.offline = true
+
+        when:
+        project.dependencies.add('compile', childProject)
+        childProject.dependencies.add('implementation', child2Project)
+        def result = dependenciesProvider.provide(module)
+
+        then:
+        result.size() == 2
+        result.findAll { it.scope == 'COMPILE' }.size() == 1
+        result.findAll { it.scope == 'RUNTIME' }.size() == 1
+    }
+
+    def "api dependency of child project is mapped to compile scope"() {
+        applyPluginToProjects()
+        project.apply(plugin: 'java')
+        childProject.apply(plugin: 'java-library')
+        def child2Project = TestUtil.createChildProject(project, "child2", new File("."))
+        child2Project.apply(plugin: 'java-library')
+
+        def module = project.ideaModule.module // Mock(IdeaModule)
+        module.offline = true
+
+        when:
+        project.dependencies.add('compile', childProject)
+        childProject.dependencies.add('api', child2Project)
+        def result = dependenciesProvider.provide(module)
+
+        then:
+        result.size() == 2
+        result.findAll { it.scope == 'COMPILE' }.size() == 2
+    }
+
     def "test and runtime scope for the same dependency"() {
         applyPluginToProjects()
         project.apply(plugin: 'java')
@@ -201,11 +277,12 @@ public class IdeaDependenciesProviderTest extends AbstractProjectBuilderSpec {
         def result = dependenciesProvider.provide(module)
 
         then:
-        result.size() == 4
+        result.size() == 5
         assertSingleLibrary(result, 'PROVIDED', 'foo-runtime.jar')
         assertSingleLibrary(result, 'PROVIDED', 'foo-testRuntime.jar')
         assertSingleLibrary(result, 'RUNTIME', 'foo-runtime.jar')
         assertSingleLibrary(result, 'TEST', 'foo-testRuntime.jar')
+        assertSingleLibrary(result, 'TEST', 'foo-runtime.jar')
     }
 
     def "ignore unknown configurations"() {
@@ -223,9 +300,9 @@ public class IdeaDependenciesProviderTest extends AbstractProjectBuilderSpec {
         def result = dependenciesProvider.provide(module)
 
         then:
-        // only for compile, runtime, testCompile, testRuntime, compileOnly, testCompileOnly
-        6 * dependenciesExtractor.extractProjectDependencies(_, { !it.contains(extraConfiguration) }, _)
-        6 * dependenciesExtractor.extractLocalFileDependencies({ !it.contains(extraConfiguration) }, _)
+        // only for compile, implementation, compileClasspath, testCompileClasspath, testRuntimeClasspath, compileOnly, testCompileOnly
+        7 * dependenciesExtractor.extractProjectDependencies(_, { !it.contains(extraConfiguration) }, _)
+        7 * dependenciesExtractor.extractLocalFileDependencies({ !it.contains(extraConfiguration) }, _)
         // offline: 4 * dependenciesExtractor.extractRepoFileDependencies(_, { !it.contains(extraConfiguration) }, _, _, _)
         0 * dependenciesExtractor._
         result.size() == 1
