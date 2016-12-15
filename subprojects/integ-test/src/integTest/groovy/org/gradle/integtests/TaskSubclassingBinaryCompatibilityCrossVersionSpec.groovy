@@ -45,6 +45,7 @@ import org.gradle.plugins.ide.idea.GenerateIdeaWorkspace
 import org.gradle.plugins.signing.Sign
 import org.gradle.util.GradleVersion
 import org.junit.Assume
+
 /**
  * Tests that task classes compiled against earlier versions of Gradle are still compatible.
  */
@@ -171,9 +172,30 @@ apply plugin: SomePlugin
                 public SubclassTask() {
                     // These methods changed in 3.2 in a backwards compatible way, but they
                     // leak internal types that cannot be moved without causing a breakage.
-                    getInputs().file("someFile");
-                    getInputs().files("anotherFile", "yetAnotherFile");
-                    getInputs().dir("someDir");
+                    ${
+                        if (previous.version >= GradleVersion.version("3.0")) {
+                            // The property builders were not introduced until 3.0
+                            """
+                                getInputs().file("someFile").withPropertyName("input1");
+                                getInputs().files("anotherFile", "yetAnotherFile").withPropertyName("input2");
+                                getInputs().dir("someDir").withPropertyName("input3").skipWhenEmpty();
+
+                                getOutputs().file("someFile").withPropertyName("input1");
+                                getOutputs().files("anotherFile", "yetAnotherFile").withPropertyName("input2");
+                                getOutputs().dir("someDir").withPropertyName("input3").optional();
+                            """
+                        } else {
+                            """
+                                getInputs().file("someFile");
+                                getInputs().files("anotherFile", "yetAnotherFile");
+                                getInputs().dir("someDir");
+
+                                getOutputs().file("someFile");
+                                getOutputs().files("anotherFile", "yetAnotherFile");
+                                getOutputs().dir("someDir");
+                            """
+                        }
+                    }
                 }
                 
                 @TaskAction
