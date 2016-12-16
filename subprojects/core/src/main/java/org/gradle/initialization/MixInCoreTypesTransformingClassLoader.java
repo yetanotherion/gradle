@@ -27,7 +27,9 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Mixes in internal methods to core Gradle types.
@@ -75,20 +77,41 @@ public class MixInCoreTypesTransformingClassLoader extends TransformingClassLoad
      * {@link org.gradle.api.Task#getOutputs()} to {@link org.gradle.api.internal.TaskInternal}.
      */
     private static class TaskInternalTransformer extends ClassVisitor {
+        private final Set<String> methodsToCreate;
+
         public TaskInternalTransformer(ClassVisitor cv) {
             super(Opcodes.ASM5, cv);
+            methodsToCreate = new LinkedHashSet<String>();
+            methodsToCreate.add("getInputs");
+            methodsToCreate.add("getOutputs");
+        }
+
+        @Override
+        public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+            if (methodsToCreate.contains(name)
+                && (
+                    desc.equals(Type.getMethodDescriptor(getType("org.gradle.api.internal.TaskInputsInternal")))
+                || desc.equals(Type.getMethodDescriptor(getType("org.gradle.api.internal.TaskOutputsInternal")))
+            )) {
+                methodsToCreate.remove(name);
+            }
+            return super.visitMethod(access, name, desc, signature, exceptions);
         }
 
         @Override
         public void visitEnd() {
-            addInterfaceMethod(cv,
-                getType("org.gradle.api.internal.TaskInputsInternal"),
-                "getInputs"
-            );
-            addInterfaceMethod(cv,
-                getType("org.gradle.api.internal.TaskOutputsInternal"),
-                "getOutputs"
-            );
+            if (methodsToCreate.contains("getInputs")) {
+                addInterfaceMethod(cv,
+                    getType("org.gradle.api.internal.TaskInputsInternal"),
+                    "getInputs"
+                );
+            }
+            if (methodsToCreate.contains("getOutputs")) {
+                addInterfaceMethod(cv,
+                    getType("org.gradle.api.internal.TaskOutputsInternal"),
+                    "getOutputs"
+                );
+            }
             super.visitEnd();
         }
     }
@@ -98,24 +121,44 @@ public class MixInCoreTypesTransformingClassLoader extends TransformingClassLoad
      * {@link org.gradle.api.Task#getOutputs()} to {@link org.gradle.api.internal.AbstractTask}.
      */
     private static class AbstractTaskTransformer extends ClassVisitor {
+        private final Set<String> methodsToCreate;
+
         public AbstractTaskTransformer(ClassVisitor cv) {
             super(Opcodes.ASM5, cv);
+            methodsToCreate = new LinkedHashSet<String>();
+            methodsToCreate.add("getInputs");
+            methodsToCreate.add("getOutputs");
+        }
+
+        @Override
+        public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+            if (methodsToCreate.contains(name)
+                && (desc.equals(Type.getMethodDescriptor(getType("org.gradle.api.internal.TaskInputsInternal")))
+                    || desc.equals(Type.getMethodDescriptor(getType("org.gradle.api.internal.TaskOutputsInternal"))))
+                ) {
+                methodsToCreate.remove(name);
+            }
+            return super.visitMethod(access, name, desc, signature, exceptions);
         }
 
         @Override
         public void visitEnd() {
-            addBridgeMethod(cv,
-                getType("org.gradle.api.internal.TaskInputsInternal"),
-                "getInputs",
-                getType("org.gradle.api.Task"),
-                getType("org.gradle.api.tasks.TaskInputs")
-            );
-            addBridgeMethod(cv,
-                getType("org.gradle.api.internal.TaskOutputsInternal"),
-                "getOutputs",
-                getType("org.gradle.api.Task"),
-                getType("org.gradle.api.tasks.TaskOutputs")
-            );
+            if (methodsToCreate.contains("getInputs")) {
+                addBridgeMethod(cv,
+                    getType("org.gradle.api.internal.TaskInputsInternal"),
+                    "getInputs",
+                    getType("org.gradle.api.Task"),
+                    getType("org.gradle.api.tasks.TaskInputs")
+                );
+            }
+            if (methodsToCreate.contains("getOutputs")) {
+                addBridgeMethod(cv,
+                    getType("org.gradle.api.internal.TaskOutputsInternal"),
+                    "getOutputs",
+                    getType("org.gradle.api.Task"),
+                    getType("org.gradle.api.tasks.TaskOutputs")
+                );
+            }
             super.visitEnd();
         }
     }
