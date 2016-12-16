@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.gradle.launcher.bootstrap;
+package org.gradle.initialization;
 
 import org.gradle.internal.classloader.TransformingClassLoader;
 import org.gradle.internal.classpath.ClassPath;

@@ -16,9 +16,9 @@
 package org.gradle.tooling.internal.consumer.loader;
 
 import org.gradle.initialization.BuildCancellationToken;
+import org.gradle.initialization.MixInCoreTypesTransformingClassLoader;
 import org.gradle.internal.Factory;
 import org.gradle.internal.classloader.FilteringClassLoader;
-import org.gradle.internal.classloader.VisitableURLClassLoader;
 import org.gradle.internal.classpath.ClassPath;
 import org.gradle.internal.logging.progress.ProgressLoggerFactory;
 import org.gradle.internal.service.DefaultServiceLocator;
@@ -115,6 +115,6 @@ public class DefaultToolingImplementationLoader implements ToolingImplementation
         FilteringClassLoader.Spec filterSpec = new FilteringClassLoader.Spec();
         filterSpec.allowPackage("org.gradle.tooling.internal.protocol");
         FilteringClassLoader filteringClassLoader = new FilteringClassLoader(classLoader, filterSpec);
-        return new VisitableURLClassLoader(filteringClassLoader, implementationClasspath);
+        return new MixInCoreTypesTransformingClassLoader(filteringClassLoader, implementationClasspath);
     }
 }
