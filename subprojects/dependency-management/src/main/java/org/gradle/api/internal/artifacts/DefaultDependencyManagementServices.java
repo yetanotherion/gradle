@@ -22,6 +22,7 @@ import org.gradle.api.artifacts.dsl.ComponentMetadataHandler;
 import org.gradle.api.artifacts.dsl.ComponentModuleMetadataHandler;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.artifacts.dsl.RepositoryHandler;
+import org.gradle.api.artifacts.transform.ArtifactTransformRegistrations;
 import org.gradle.api.attributes.AttributesSchema;
 import org.gradle.api.internal.DomainObjectContext;
 import org.gradle.api.internal.artifacts.component.ComponentIdentifierFactory;
@@ -56,6 +57,8 @@ import org.gradle.api.internal.artifacts.query.ArtifactResolutionQueryFactory;
 import org.gradle.api.internal.artifacts.query.DefaultArtifactResolutionQueryFactory;
 import org.gradle.api.internal.artifacts.repositories.DefaultBaseRepositoryFactory;
 import org.gradle.api.internal.artifacts.repositories.transport.RepositoryTransportFactory;
+import org.gradle.api.internal.artifacts.transform.DefaultArtifactTransformRegistrations;
+import org.gradle.api.internal.artifacts.transform.DefaultArtifactTransforms;
 import org.gradle.api.internal.attributes.DefaultAttributesSchema;
 import org.gradle.api.internal.component.ComponentTypeRegistry;
 import org.gradle.api.internal.file.FileCollectionFactory;
@@ -98,6 +101,10 @@ public class DefaultDependencyManagementServices implements DependencyManagement
     private static class DependencyResolutionScopeServices {
         AttributesSchema createConfigurationAttributesSchema(Instantiator instantiator) {
             return instantiator.newInstance(DefaultAttributesSchema.class);
+        }
+
+        ArtifactTransformRegistrations createArtifactTransformRegistrations(Instantiator instantiator, AttributesSchema attributesSchema) {
+            return instantiator.newInstance(DefaultArtifactTransformRegistrations.class, attributesSchema);
         }
 
         BaseRepositoryFactory createBaseRepositoryFactory(LocalMavenRepositoryLocator localMavenRepositoryLocator, Instantiator instantiator, FileResolver fileResolver,
@@ -145,7 +152,8 @@ public class DefaultDependencyManagementServices implements DependencyManagement
 
         DependencyHandler createDependencyHandler(Instantiator instantiator, ConfigurationContainerInternal configurationContainer, DependencyFactory dependencyFactory,
                                                   ProjectFinder projectFinder, ComponentMetadataHandler componentMetadataHandler, ComponentModuleMetadataHandler componentModuleMetadataHandler,
-                                                  ArtifactResolutionQueryFactory resolutionQueryFactory, AttributesSchema attributesSchema) {
+                                                  ArtifactResolutionQueryFactory resolutionQueryFactory, AttributesSchema attributesSchema,
+                                                  ArtifactTransformRegistrations artifactTransformRegistrations) {
             return instantiator.newInstance(DefaultDependencyHandler.class,
                     configurationContainer,
                     dependencyFactory,
@@ -153,7 +161,8 @@ public class DefaultDependencyManagementServices implements DependencyManagement
                     componentMetadataHandler,
                     componentModuleMetadataHandler,
                     resolutionQueryFactory,
-                    attributesSchema);
+                    attributesSchema,
+                    artifactTransformRegistrations);
         }
 
         DefaultComponentMetadataHandler createComponentMetadataHandler(Instantiator instantiator) {
@@ -180,7 +189,8 @@ public class DefaultDependencyManagementServices implements DependencyManagement
                                                        CacheLockingManager cacheLockingManager,
                                                        ResolutionResultsStoreFactory resolutionResultsStoreFactory,
                                                        StartParameter startParameter,
-                                                       AttributesSchema attributesSchema) {
+                                                       AttributesSchema attributesSchema,
+                                                       ArtifactTransformRegistrations artifactTransformRegistrations) {
             return new ErrorHandlingConfigurationResolver(
                     new ShortCircuitEmptyConfigurationResolver(
                         new DefaultConfigurationResolver(
@@ -189,7 +199,8 @@ public class DefaultDependencyManagementServices implements DependencyManagement
                             metadataHandler,
                             cacheLockingManager,
                             resolutionResultsStoreFactory,
-                            startParameter.isBuildProjectDependencies(), attributesSchema),
+                            startParameter.isBuildProjectDependencies(), attributesSchema,
+                            new DefaultArtifactTransforms(artifactTransformRegistrations)),
                         componentIdentifierFactory)
             );
         }

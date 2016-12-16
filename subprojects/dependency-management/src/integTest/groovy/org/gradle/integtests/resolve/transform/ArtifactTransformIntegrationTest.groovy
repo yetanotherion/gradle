@@ -412,11 +412,11 @@ class FileSizer extends ArtifactTransform {
                     compile project(':lib')
                 }
 
-                configurations.all {
-                    resolutionStrategy.registerTransform(Type1Transform) {
+                dependencies {
+                    registerTransform(Type1Transform) {
                         outputDirectory = project.file("\${buildDir}/transform1")
                     }
-                    resolutionStrategy.registerTransform(Type2Transform) {
+                    registerTransform(Type2Transform) {
                         outputDirectory = project.file("\${buildDir}/transform2")
                     }
                 }
@@ -435,7 +435,9 @@ class FileSizer extends ArtifactTransform {
             
                 List<File> transform(File input, AttributeContainer target) {
                     def output = new File(outputDirectory, 'out1')
-                    output << "content1"
+                    if (!output.exists()) {
+                        output << "content1"
+                    }
                     return [output]
                 }
             }
@@ -448,7 +450,9 @@ class FileSizer extends ArtifactTransform {
             
                 List<File> transform(File input, AttributeContainer target) {
                     def output = new File(outputDirectory, 'out2')
-                    output << "content2"
+                    if (!output.exists()) {
+                        output << "content2"
+                    }
                     return [output]
                 }
             }
@@ -492,9 +496,11 @@ class FileSizer extends ArtifactTransform {
                 configurations {
                     compile {
                         attributes artifactType: 'size'
-                        resolutionStrategy.registerTransform(FileSizer) {
-                            outputDirectory = project.file("\${buildDir}/transformed")
-                        }
+                    }
+                }
+                dependencies {
+                    registerTransform(FileSizer) {
+                        outputDirectory = project.file("\${buildDir}/transformed")
                     }
                 }
                 ext.checkArtifacts = { artifacts ->
@@ -559,9 +565,11 @@ class FileSizer extends ArtifactTransform {
                 configurations {
                     compile {
                         attributes artifactType: 'size'
-                        resolutionStrategy.registerTransform(FileSizer) {
-                            outputDirectory = project.file("\${buildDir}/transformed")
-                        }
+                    }
+                }
+                dependencies {
+                    registerTransform(FileSizer) {
+                        outputDirectory = project.file("\${buildDir}/transformed")
                     }
                 }
                 task resolve {
@@ -628,12 +636,10 @@ class FileSizer extends ArtifactTransform {
                     }             
                 }
             }
-            configurations {
-                compile {
-                    resolutionStrategy.registerTransform(TransformWithMultipleTargets) {
-                            outputDirectory = project.file("\${buildDir}/transformed")
-                    }
-                }
+            dependencies {
+                registerTransform(TransformWithMultipleTargets) {
+                        outputDirectory = project.file("\${buildDir}/transformed")
+                }                
             }
             task resolve {
                 doLast {
@@ -830,10 +836,11 @@ class FileSizer extends ArtifactTransform {
     }
 
     def registerTransform(String implementation) {
-        """configurations.all {
-                resolutionStrategy.registerTransform($implementation) {
+        """
+            dependencies {
+                registerTransform($implementation) {
                     outputDirectory = project.file("\${buildDir}/transformed")
-                }
+                }  
             }
 """
 

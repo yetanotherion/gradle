@@ -44,12 +44,32 @@ public class ComponentAttributeMatcher {
     private final AttributesSchema producerAttributeSchema;
     private final Map<HasAttributes, MatchDetails> matchDetails = Maps.newHashMap();
     private final AttributeContainer consumerAttributesContainer;
-    private final AttributeContainer attributesToConsider;
+
+    public static List<? extends HasAttributes> getMatches(AttributesSchema consumerAttributeSchema,
+                                                           AttributesSchema producerAttributeSchema,
+                                                           List<HasAttributes> candidates,
+                                                           AttributeContainer consumerAttributesContainer) {
+
+        return new ComponentAttributeMatcher(consumerAttributeSchema, producerAttributeSchema, candidates, consumerAttributesContainer).getMatches();
+    }
+
+    public static boolean isMatching(AttributesSchema schema, AttributeContainer candidate, AttributeContainer target) {
+        MatchDetails details = new MatchDetails();
+        Set<Attribute<Object>> candidateAttributes = Cast.uncheckedCast(candidate.getAttributes().keySet());
+        for (Attribute<Object> attribute : candidateAttributes) {
+            AttributeValue<Object> candidateValue = attributeValue(attribute, schema, candidate.getAttributes());
+            AttributeValue<Object> targetValue = attributeValue(attribute, schema, target);
+            details.update(attribute, schema, schema, candidateValue, targetValue);
+            if (!details.compatible) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     public ComponentAttributeMatcher(AttributesSchema consumerAttributeSchema, AttributesSchema producerAttributeSchema,
                                      Iterable<HasAttributes> candidates, //configAttributes + artifactAttributes
-                                     AttributeContainer consumerAttributesContainer,
-                                     AttributeContainer attributesToConsider) {
+                                     AttributeContainer consumerAttributesContainer) {
         this.consumerAttributeSchema = consumerAttributeSchema;
         this.producerAttributeSchema = producerAttributeSchema;
         for (HasAttributes cand : candidates) {
@@ -58,7 +78,6 @@ public class ComponentAttributeMatcher {
             }
         }
         this.consumerAttributesContainer = consumerAttributesContainer;
-        this.attributesToConsider = attributesToConsider;
         doMatch();
     }
 
@@ -69,8 +88,7 @@ public class ComponentAttributeMatcher {
             MatchDetails details = entry.getValue();
             AttributeContainer producerAttributesContainer = key.getAttributes();
             Set<Attribute<Object>> dependencyAttributes = Cast.uncheckedCast(producerAttributesContainer.keySet());
-            Set<Attribute<Object>> filter = attributesToConsider != null ? Cast.<Set<Attribute<Object>>>uncheckedCast(attributesToConsider.keySet()) : null;
-            Set<Attribute<Object>> allAttributes = filter != null ? filter : Sets.union(requestedAttributes, dependencyAttributes);
+            Set<Attribute<Object>> allAttributes = Sets.union(requestedAttributes, dependencyAttributes);
             for (Attribute<Object> attribute : allAttributes) {
                 AttributeValue<Object> consumerValue = attributeValue(attribute, consumerAttributeSchema, consumerAttributesContainer);
                 AttributeValue<Object> producerValue = attributeValue(attribute, producerAttributeSchema, producerAttributesContainer);
@@ -89,7 +107,7 @@ public class ComponentAttributeMatcher {
         return attributeValue;
     }
 
-    public List<? extends HasAttributes> getMatchs() {
+    public List<? extends HasAttributes> getMatches() {
         List<HasAttributes> matchs = new ArrayList<HasAttributes>(1);
         for (Map.Entry<HasAttributes, MatchDetails> entry : matchDetails.entrySet()) {
             MatchDetails details = entry.getValue();

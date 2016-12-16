@@ -20,9 +20,9 @@ import org.gradle.api.Buildable
 import org.gradle.api.Transformer
 import org.gradle.api.artifacts.ResolvedArtifact
 import org.gradle.api.artifacts.component.ComponentIdentifier
+import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.api.attributes.AttributeContainer
 import org.gradle.api.internal.artifacts.attributes.DefaultArtifactAttributes
-import org.gradle.api.internal.artifacts.configurations.ResolutionStrategyInternal
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.artifact.ArtifactVisitor
 import org.gradle.api.internal.attributes.DefaultAttributeContainer
 import org.gradle.api.internal.attributes.DefaultAttributesSchema
@@ -32,11 +32,11 @@ import spock.lang.Specification
 import static org.gradle.api.internal.artifacts.ArtifactAttributes.*
 
 class ArtifactTransformerTest extends Specification {
-    def resolutionStrategy = Mock(ResolutionStrategyInternal)
+    def dependencyHandler = Mock(DependencyHandler)
     def attributesSchema = new DefaultAttributesSchema()
     def artifactTransforms = Mock(ArtifactTransforms)
-    def artifactAttributeMatcher = new ArtifactAttributeMatcher(attributesSchema);
-    def transformer = new ArtifactTransformer(artifactTransforms, artifactAttributeMatcher)
+    def artifactAttributeMatcher = new ArtifactAttributeMatcher(attributesSchema)
+    def transformer = new DefaultArtifactTransforms(dependencyHandler, artifactAttributeMatcher)
 
     def setup() {
         attributesSchema.attribute(ARTIFACT_FORMAT) {

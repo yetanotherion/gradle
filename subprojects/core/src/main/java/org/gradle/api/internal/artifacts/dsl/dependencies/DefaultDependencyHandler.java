@@ -27,6 +27,8 @@ import org.gradle.api.artifacts.dsl.ComponentMetadataHandler;
 import org.gradle.api.artifacts.dsl.ComponentModuleMetadataHandler;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.artifacts.query.ArtifactResolutionQuery;
+import org.gradle.api.artifacts.transform.ArtifactTransform;
+import org.gradle.api.artifacts.transform.ArtifactTransformRegistrations;
 import org.gradle.api.attributes.AttributeMatchingStrategy;
 import org.gradle.api.attributes.AttributesSchema;
 import org.gradle.api.attributes.CompatibilityRuleChain;
@@ -37,9 +39,7 @@ import org.gradle.util.ConfigureUtil;
 import java.util.List;
 import java.util.Map;
 
-import static org.gradle.api.internal.artifacts.ArtifactAttributes.ARTIFACT_CLASSIFIER;
-import static org.gradle.api.internal.artifacts.ArtifactAttributes.ARTIFACT_EXTENSION;
-import static org.gradle.api.internal.artifacts.ArtifactAttributes.ARTIFACT_FORMAT;
+import static org.gradle.api.internal.artifacts.ArtifactAttributes.*;
 
 public class DefaultDependencyHandler extends GroovyObjectSupport implements DependencyHandler {
     private static final Action<AttributeMatchingStrategy<String>> ARTIFACT_ATTRIBUTE_CONFIG = new Action<AttributeMatchingStrategy<String>>() {
@@ -65,10 +65,12 @@ public class DefaultDependencyHandler extends GroovyObjectSupport implements Dep
     private final ComponentModuleMetadataHandler componentModuleMetadataHandler;
     private final ArtifactResolutionQueryFactory resolutionQueryFactory;
     private final AttributesSchema attributesSchema;
+    private final ArtifactTransformRegistrations transforms;
 
     public DefaultDependencyHandler(ConfigurationContainer configurationContainer, DependencyFactory dependencyFactory,
                                     ProjectFinder projectFinder, ComponentMetadataHandler componentMetadataHandler, ComponentModuleMetadataHandler componentModuleMetadataHandler,
-                                    ArtifactResolutionQueryFactory resolutionQueryFactory, AttributesSchema attributesSchema) {
+                                    ArtifactResolutionQueryFactory resolutionQueryFactory, AttributesSchema attributesSchema,
+                                    ArtifactTransformRegistrations transforms) {
         this.configurationContainer = configurationContainer;
         this.dependencyFactory = dependencyFactory;
         this.projectFinder = projectFinder;
@@ -76,6 +78,7 @@ public class DefaultDependencyHandler extends GroovyObjectSupport implements Dep
         this.componentModuleMetadataHandler = componentModuleMetadataHandler;
         this.resolutionQueryFactory = resolutionQueryFactory;
         this.attributesSchema = attributesSchema;
+        this.transforms = transforms;
         configureSchema();
     }
 
@@ -188,5 +191,10 @@ public class DefaultDependencyHandler extends GroovyObjectSupport implements Dep
 
     private void configureSchema() {
         attributesSchema(CONFIGURE_DEFAULT_SCHEMA_ACTION);
+    }
+
+    @Override
+    public void registerTransform(Class<? extends ArtifactTransform> type, Action<? super ArtifactTransform> config) {
+        transforms.registerTransform(type, config);
     }
 }

@@ -14,18 +14,11 @@
  * limitations under the License.
  */
 
-package org.gradle.api.internal.artifacts.transform;
+package org.gradle.api.artifacts.transform;
 
-import org.gradle.api.Transformer;
-import org.gradle.api.attributes.HasAttributes;
-import org.gradle.api.internal.artifacts.ivyservice.resolveengine.artifact.ArtifactVisitor;
-import org.gradle.api.internal.attributes.AttributeContainerInternal;
+import org.gradle.api.Action;
 
-import java.util.Collection;
+public interface ArtifactTransformRegistrations {
 
-public interface ArtifactTransforms {
-
-    <T extends HasAttributes> Transformer<T, Collection<? extends T>> variantSelector(final AttributeContainerInternal attributes);
-
-    ArtifactVisitor visitor(ArtifactVisitor visitor, AttributeContainerInternal requestedAttributes);
+    void registerTransform(Class<? extends ArtifactTransform> type, Action<? super ArtifactTransform> config);
 }
