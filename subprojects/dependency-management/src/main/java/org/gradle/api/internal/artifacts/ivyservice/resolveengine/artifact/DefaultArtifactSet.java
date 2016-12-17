@@ -85,7 +85,7 @@ public class DefaultArtifactSet implements ArtifactSet {
             Set<ResolvedArtifact> resolvedArtifacts = new LinkedHashSet<ResolvedArtifact>(artifacts.size());
 
             // Add artifact type as an implicit attribute when there is a single artifact
-            AttributeContainerInternal attributes = variant.getAttributes();
+            AttributeContainerInternal attributes = AttributeContainerInternal.EMPTY;
             if (artifacts.size() == 1 && !attributes.contains(ArtifactAttributes.ARTIFACT_FORMAT)) {
                 DefaultAttributeContainer implicitAttributes = new DefaultAttributeContainer(attributes);
                 implicitAttributes.attribute(ArtifactAttributes.ARTIFACT_FORMAT, artifacts.iterator().next().getName().getType());

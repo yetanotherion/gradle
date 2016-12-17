@@ -373,7 +373,7 @@ abstract class AbstractModuleComponentResolveMetadata implements ModuleComponent
 
         @Override
         public Set<? extends VariantMetadata> getVariants() {
-            return ImmutableSet.of(new DefaultVariantMetadata(getAttributes(), getArtifacts()));
+            return ImmutableSet.of(new DefaultVariantMetadata(AttributeContainerInternal.EMPTY, getArtifacts()));
         }
 
         public ModuleComponentArtifactMetadata artifact(IvyArtifactName artifact) {
