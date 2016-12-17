@@ -17,8 +17,23 @@
 package org.gradle.api.artifacts.transform;
 
 import org.gradle.api.Action;
+import org.gradle.api.Incubating;
 
+/**
+ * Registry for artifact transforms.
+ */
+@Incubating
 public interface ArtifactTransformRegistrations {
 
+    /**
+     * Register an artifact transformation.
+     *
+     * @param type implementation type of the artifact transformation
+     * @param config a configuration action
+     *
+     * @see ArtifactTransform
+     * @since 3.4
+     */
+    @Incubating
     void registerTransform(Class<? extends ArtifactTransform> type, Action<? super ArtifactTransform> config);
 }
