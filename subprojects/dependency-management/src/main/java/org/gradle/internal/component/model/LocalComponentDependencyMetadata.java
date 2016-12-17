@@ -31,6 +31,7 @@ import org.gradle.api.internal.artifacts.DefaultModuleVersionSelector;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.excludes.ModuleExclusion;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.excludes.ModuleExclusions;
 import org.gradle.api.internal.attributes.AttributeContainerInternal;
+import org.gradle.api.internal.attributes.AttributesSchemaInternal;
 import org.gradle.internal.Cast;
 import org.gradle.internal.component.AmbiguousConfigurationSelectionException;
 import org.gradle.internal.component.NoMatchingConfigurationSelectionException;
@@ -113,7 +114,7 @@ public class LocalComponentDependencyMetadata implements LocalOriginDependencyMe
         AttributesSchema producerAttributeSchema = targetComponent instanceof LocalComponentMetadata ? ((LocalComponentMetadata) targetComponent).getAttributesSchema() : attributesSchema;
         if (useConfigurationAttributes) {
             List<HasAttributes> consumableConfigurations = getConfigurationsAsHasAttributes(targetComponent);
-            List<ConfigurationMetadata> matches = Cast.uncheckedCast(ComponentAttributeMatcher.getMatches(attributesSchema, producerAttributeSchema, consumableConfigurations, fromConfigurationAttributes));
+            List<ConfigurationMetadata> matches = Cast.uncheckedCast(((AttributesSchemaInternal) attributesSchema).getMatches(producerAttributeSchema, consumableConfigurations, fromConfigurationAttributes));
             if (matches.size() == 1) {
                 return ImmutableSet.of(ClientAttributesPreservingConfigurationMetadata.wrapIfLocal(matches.get(0), fromConfigurationAttributes));
             } else if (!matches.isEmpty()) {
@@ -144,7 +145,7 @@ public class LocalComponentDependencyMetadata implements LocalOriginDependencyMe
         if (consumerHasAttributes) {
             if (!delegate.getAttributes().isEmpty()) {
                 // need to validate that the selected configuration still matches the consumer attributes
-                List<? extends HasAttributes> matches = ComponentAttributeMatcher.getMatches(attributesSchema, producerAttributeSchema, Collections.singletonList((HasAttributes) delegate), fromConfigurationAttributes);
+                List<? extends HasAttributes> matches = ((AttributesSchemaInternal) attributesSchema).getMatches(producerAttributeSchema, Collections.singletonList((HasAttributes) delegate), fromConfigurationAttributes);
                 if (matches.isEmpty()) {
                     throw new NoMatchingConfigurationSelectionException(fromConfigurationAttributes, attributesSchema, targetComponent, Collections.singletonList(targetConfiguration));
                 }
