@@ -19,6 +19,7 @@ import org.gradle.initialization.BuildCancellationToken;
 import org.gradle.initialization.MixInCoreTypesTransformingClassLoader;
 import org.gradle.internal.Factory;
 import org.gradle.internal.classloader.FilteringClassLoader;
+import org.gradle.internal.classloader.VisitableURLClassLoader;
 import org.gradle.internal.classpath.ClassPath;
 import org.gradle.internal.logging.progress.ProgressLoggerFactory;
 import org.gradle.internal.service.DefaultServiceLocator;
@@ -67,7 +68,7 @@ public class DefaultToolingImplementationLoader implements ToolingImplementation
 
     public ConsumerConnection create(Distribution distribution, ProgressLoggerFactory progressLoggerFactory, ConnectionParameters connectionParameters, BuildCancellationToken cancellationToken) {
         LOGGER.debug("Using tooling provider from {}", distribution.getDisplayName());
-        ClassLoader serviceClassLoader = createImplementationClassLoader(distribution, progressLoggerFactory, connectionParameters.getGradleUserHomeDir(), cancellationToken);
+        ClassLoader serviceClassLoader = createImplementationClassLoader(distribution, progressLoggerFactory, connectionParameters.getGradleUserHomeDir(), cancellationToken, connectionParameters.isEmbedded());
         ServiceLocator serviceLocator = new DefaultServiceLocator(serviceClassLoader);
         try {
             Factory<ConnectionVersion4> factory = serviceLocator.findFactory(ConnectionVersion4.class);
@@ -109,12 +110,15 @@ public class DefaultToolingImplementationLoader implements ToolingImplementation
         }
     }
 
-    private ClassLoader createImplementationClassLoader(Distribution distribution, ProgressLoggerFactory progressLoggerFactory, File userHomeDir, BuildCancellationToken cancellationToken) {
+    private ClassLoader createImplementationClassLoader(Distribution distribution, ProgressLoggerFactory progressLoggerFactory, File userHomeDir, BuildCancellationToken cancellationToken, Boolean embedded) {
         ClassPath implementationClasspath = distribution.getToolingImplementationClasspath(progressLoggerFactory, userHomeDir, cancellationToken);
         LOGGER.debug("Using tooling provider classpath: {}", implementationClasspath);
         FilteringClassLoader.Spec filterSpec = new FilteringClassLoader.Spec();
         filterSpec.allowPackage("org.gradle.tooling.internal.protocol");
         FilteringClassLoader filteringClassLoader = new FilteringClassLoader(classLoader, filterSpec);
-        return new MixInCoreTypesTransformingClassLoader(filteringClassLoader, implementationClasspath);
+        if (Boolean.TRUE.equals(embedded)) {
+            return new MixInCoreTypesTransformingClassLoader(filteringClassLoader, implementationClasspath);
+        }
+        return new VisitableURLClassLoader(filteringClassLoader, implementationClasspath);
     }
 }
