@@ -19,10 +19,11 @@ package org.gradle.api.internal.attributes
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.attributes.CompatibilityCheckDetails
 import org.gradle.api.attributes.MultipleCandidatesDetails
+import org.gradle.internal.component.model.ComponentAttributeMatcher
 import spock.lang.Specification
 
 class DefaultAttributesSchemaTest extends Specification {
-    def schema = new DefaultAttributesSchema()
+    def schema = new DefaultAttributesSchema(new ComponentAttributeMatcher())
 
     def "fails if no strategy is declared for custom type"() {
         when:

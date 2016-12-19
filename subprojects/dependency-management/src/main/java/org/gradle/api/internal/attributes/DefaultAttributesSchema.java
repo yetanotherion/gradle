@@ -33,8 +33,13 @@ import java.util.Set;
 
 public class DefaultAttributesSchema implements AttributesSchemaInternal {
 
+    private final ComponentAttributeMatcher componentAttributeMatcher;
     private final Map<Attribute<?>, AttributeMatchingStrategy<?>> strategies = Maps.newHashMap();
     private final Map<Key, List<? extends HasAttributes>> matchesCache = Maps.newHashMap();
+
+    public DefaultAttributesSchema(ComponentAttributeMatcher componentAttributeMatcher) {
+        this.componentAttributeMatcher = componentAttributeMatcher;
+    }
 
     @Override
     @SuppressWarnings("unchecked")
@@ -79,10 +84,15 @@ public class DefaultAttributesSchema implements AttributesSchemaInternal {
         Key key = new Key(producerAttributeSchema, candidates, consumer);
         List<? extends HasAttributes> match = this.matchesCache.get(key);
         if (match == null) {
-            match = ComponentAttributeMatcher.getMatches(this, producerAttributeSchema, candidates, consumer);
+            match = componentAttributeMatcher.match(this, producerAttributeSchema, candidates, consumer);
             matchesCache.put(key, match);
         }
         return match;
+    }
+
+    @Override
+    public boolean isMatching(AttributeContainer candidate, AttributeContainer target) {
+        return componentAttributeMatcher.isMatching(this, candidate, target);
     }
 
     private static class Key {
@@ -107,9 +117,9 @@ public class DefaultAttributesSchema implements AttributesSchemaInternal {
                 return false;
             }
             Key key = (Key) o;
-            return Objects.equal(producerAttributeSchema, key.producerAttributeSchema) &&
-                Objects.equal(candidates, key.candidates) &&
-                Objects.equal(consumer, key.consumer);
+            return Objects.equal(producerAttributeSchema, key.producerAttributeSchema)
+                && Objects.equal(candidates, key.candidates)
+                && Objects.equal(consumer, key.consumer);
         }
 
         @Override

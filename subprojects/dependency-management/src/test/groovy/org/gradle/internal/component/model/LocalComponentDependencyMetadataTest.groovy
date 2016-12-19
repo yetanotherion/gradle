@@ -16,20 +16,20 @@
 
 package org.gradle.internal.component.model
 
+import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ModuleVersionSelector
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ComponentSelector
 import org.gradle.api.artifacts.component.ProjectComponentSelector
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.attributes.AttributeContainer
-import org.gradle.api.attributes.AttributeMatchingStrategy
-import org.gradle.api.attributes.AttributesSchema
 import org.gradle.api.attributes.CompatibilityCheckDetails
 import org.gradle.api.internal.artifacts.DefaultModuleVersionSelector
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.excludes.ModuleExclusions
 import org.gradle.api.internal.attributes.AttributeContainerInternal
+import org.gradle.api.internal.attributes.AttributesSchemaInternal
 import org.gradle.api.internal.attributes.DefaultAttributeContainer
-import org.gradle.api.internal.attributes.DefaultAttributeMatchingStrategy
+import org.gradle.api.internal.attributes.DefaultAttributesSchema
 import org.gradle.internal.component.NoMatchingConfigurationSelectionException
 import org.gradle.internal.component.external.descriptor.DefaultExclude
 import org.gradle.internal.component.external.model.DefaultModuleComponentSelector
@@ -38,15 +38,10 @@ import spock.lang.Specification
 import spock.lang.Unroll
 
 class LocalComponentDependencyMetadataTest extends Specification {
-    AttributeMatchingStrategy defaultMatchingStrategy
-    AttributesSchema attributesSchema
+    AttributesSchemaInternal attributesSchema
 
     def setup() {
-        defaultMatchingStrategy = new DefaultAttributeMatchingStrategy()
-        attributesSchema = Mock(AttributesSchema) {
-            getMatchingStrategy(_) >> defaultMatchingStrategy
-            hasAttribute(_) >> { true }
-        }
+        attributesSchema = new DefaultAttributesSchema(new ComponentAttributeMatcher())
     }
 
     def "returns this when same version requested"() {
@@ -108,12 +103,16 @@ class LocalComponentDependencyMetadataTest extends Specification {
             getAttributes() >> attributes(key: 'something else')
             isCanBeConsumed() >> true
         }
-        attributesSchema.getAttributes() >> {
-            [Attribute.of('key', String)]
-        }
-        if (allowMissing) {
-            defaultMatchingStrategy.compatibilityRules.assumeCompatibleWhenMissing()
-        }
+        attributesSchema.attribute(Attribute.of('key', String), {
+            if (allowMissing) {
+                it.compatibilityRules.assumeCompatibleWhenMissing()
+            }
+        })
+        attributesSchema.attribute(Attribute.of('extra', String), {
+            if (allowMissing) {
+                it.compatibilityRules.assumeCompatibleWhenMissing()
+            }
+        })
 
         given:
         toComponent.getConfiguration("default") >> defaultConfig
@@ -159,13 +158,8 @@ class LocalComponentDependencyMetadataTest extends Specification {
             getAttributes() >> attributes(key: 'something else')
             isCanBeConsumed() >> true
         }
-        def schema = Mock(AttributesSchema) {
-            getMatchingStrategy(_) >> new DefaultAttributeMatchingStrategy()
-            hasAttribute(_) >> { true }
-        }
-        schema.getAttributes() >> {
-            [Attribute.of('key', String)]
-        }
+        attributesSchema.attribute(Attribute.of('key', String))
+        attributesSchema.attribute(Attribute.of('will', String))
 
         given:
         toComponent.getConfiguration("default") >> defaultConfig
@@ -173,7 +167,7 @@ class LocalComponentDependencyMetadataTest extends Specification {
         toComponent.getConfiguration("bar") >> toBarConfig
 
         when:
-        dep.selectConfigurations(fromComponent, fromConfig, toComponent, schema)*.name as Set
+        dep.selectConfigurations(fromComponent, fromConfig, toComponent, attributesSchema)*.name as Set
 
         then:
         def e = thrown(NoMatchingConfigurationSelectionException)
@@ -204,13 +198,8 @@ class LocalComponentDependencyMetadataTest extends Specification {
             getAttributes() >> attributes(key: 'something else')
             isCanBeConsumed() >> true
         }
-        def schema = Mock(AttributesSchema) {
-            getMatchingStrategy(_) >> new DefaultAttributeMatchingStrategy()
-            hasAttribute(_) >> { true }
-        }
-        schema.getAttributes() >> {
-            [Attribute.of('key', String)]
-        }
+
+        attributesSchema.attribute(Attribute.of('key', String))
 
         given:
         toComponent.getConfiguration("default") >> defaultConfig
@@ -218,7 +207,7 @@ class LocalComponentDependencyMetadataTest extends Specification {
         toComponent.getConfiguration("bar") >> toBarConfig
 
         when:
-        dep.selectConfigurations(fromComponent, fromConfig, toComponent, schema)*.name as Set
+        dep.selectConfigurations(fromComponent, fromConfig, toComponent, attributesSchema)*.name as Set
 
         then:
         def e = thrown(NoMatchingConfigurationSelectionException)
@@ -251,25 +240,16 @@ class LocalComponentDependencyMetadataTest extends Specification {
             isCanBeResolved() >> false
             isCanBeConsumed() >> true
         }
-        def schema = Mock(AttributesSchema) {
-            getMatchingStrategy(_) >> { args ->
-                def attr = args[0]
-                if (attr.name == 'platform') {
-                    def strategy = new DefaultAttributeMatchingStrategy()
-                    strategy.with {
-                        compatibilityRules.ordered { a, b -> a <=> b }
-                        disambiguationRules.pickLast { a, b -> a <=> b }
-                    }
-                    return strategy
-                }
-                return defaultMatchingStrategy
-            }
-            hasAttribute(_) >> true
-            getAttributes() >> {
-                [Attribute.of('platform', JavaVersion), Attribute.of('flavor', String)]
-            }
-        }
-        defaultMatchingStrategy.compatibilityRules.assumeCompatibleWhenMissing()
+        attributesSchema.attribute(Attribute.of('platform', JavaVersion), {
+            it.ordered { a, b -> a <=> b }
+            it.ordered(true, { a, b -> a <=> b })
+        })
+        attributesSchema.attribute(Attribute.of('flavor', String), {
+            it.compatibilityRules.assumeCompatibleWhenMissing()
+        })
+        attributesSchema.attribute(Attribute.of('extra', String), {
+            it.compatibilityRules.assumeCompatibleWhenMissing()
+        })
 
         given:
         toComponent.getConfiguration("default") >> defaultConfig
@@ -278,7 +258,7 @@ class LocalComponentDependencyMetadataTest extends Specification {
 
         expect:
         try {
-            def result = dep.selectConfigurations(fromComponent, fromConfig, toComponent, schema)*.name as Set
+            def result = dep.selectConfigurations(fromComponent, fromConfig, toComponent, attributesSchema)*.name as Set
             if (expected == null && result) {
                 throw new AssertionError("Expected an ambiguous result, but got $result")
             }
@@ -336,22 +316,16 @@ class LocalComponentDependencyMetadataTest extends Specification {
             isCanBeResolved() >> false
             isCanBeConsumed() >> true
         }
-        def schema = Mock(AttributesSchema) {
-            getMatchingStrategy(_) >> { args ->
-                def attr = args[0]
-                if (attr.name == 'platform') {
-                    def strategy = new DefaultAttributeMatchingStrategy()
-                    strategy.ordered { a, b -> a <=> b }
-                    return strategy
-                }
-                return defaultMatchingStrategy
-            }
-            hasAttribute(_) >> true
-            getAttributes() >> {
-                [Attribute.of('platform', JavaVersion), Attribute.of('flavor', String)]
-            }
-        }
-        defaultMatchingStrategy.compatibilityRules.assumeCompatibleWhenMissing()
+        attributesSchema.attribute(Attribute.of('platform', JavaVersion), {
+            it.ordered { a, b -> a <=> b }
+            it.ordered(true, { a, b -> a <=> b })
+        })
+        attributesSchema.attribute(Attribute.of('flavor', String), {
+            it.compatibilityRules.assumeCompatibleWhenMissing()
+        })
+        attributesSchema.attribute(Attribute.of('extra', String), {
+            it.compatibilityRules.assumeCompatibleWhenMissing()
+        })
 
         given:
         toComponent.getConfiguration("default") >> defaultConfig
@@ -360,7 +334,7 @@ class LocalComponentDependencyMetadataTest extends Specification {
 
         expect:
         try {
-            def result = dep.selectConfigurations(fromComponent, fromConfig, toComponent, schema)*.name as Set
+            def result = dep.selectConfigurations(fromComponent, fromConfig, toComponent, attributesSchema)*.name as Set
             if (expected == null && result) {
                 throw new AssertionError("Expected an ambiguous result, but got $result")
             }
@@ -456,38 +430,31 @@ class LocalComponentDependencyMetadataTest extends Specification {
             getAttributes() >> attributes(key: 'something else')
             isCanBeConsumed() >> true
         }
-        def attributeSchemaWithCompatibility = Mock(AttributesSchema) {
-            getMatchingStrategy(_) >> { args ->
-                def strategy = new DefaultAttributeMatchingStrategy()
-                strategy.with {
-                    compatibilityRules.add { CompatibilityCheckDetails details ->
-                        def candidate = details.producerValue
-                        if (candidate == 'something') {
-                            details.incompatible()
-                        }
-                    }
-                    compatibilityRules.add { CompatibilityCheckDetails details ->
-                        def requested = details.consumerValue
-                        def candidate = details.producerValue
-                        if (requested == candidate) { // simulate exact match
-                            details.compatible()
-                        }
-                    }
-                    compatibilityRules.add { CompatibilityCheckDetails details ->
-                        def requested = details.consumerValue
-                        def candidate = details.producerValue
-                        if (requested == 'other' && candidate == 'something else') { // simulate compatible match
-                            details.compatible()
-                        }
-                    }
+        def attributeSchemaWithCompatibility = new DefaultAttributesSchema(new ComponentAttributeMatcher())
+        attributeSchemaWithCompatibility.attribute(Attribute.of('key', String), {
+            it.compatibilityRules.add { CompatibilityCheckDetails details ->
+                def candidate = details.producerValue
+                if (candidate == 'something') {
+                    details.incompatible()
                 }
-                return strategy
             }
-            hasAttribute(_) >> true
-            getAttributes() >> {
-                [Attribute.of('key', String)]
+            it.compatibilityRules.add { CompatibilityCheckDetails details ->
+                def requested = details.consumerValue
+                def candidate = details.producerValue
+                if (requested == candidate) { // simulate exact match
+                    details.compatible()
+                }
             }
-        }
+            it.compatibilityRules.add { CompatibilityCheckDetails details ->
+                def requested = details.consumerValue
+                def candidate = details.producerValue
+                if (requested == 'other' && candidate == 'something else') { // simulate compatible match
+                    details.compatible()
+
+                }
+            }
+        })
+        attributeSchemaWithCompatibility.attribute(Attribute.of('extra', String))
 
         given:
         toComponent.getConfiguration("default") >> defaultConfig
@@ -527,15 +494,14 @@ class LocalComponentDependencyMetadataTest extends Specification {
             isCanBeConsumed() >> true
         }
 
-        def attributeSchemaWithCompatibility = Mock(AttributesSchema) {
-            getMatchingStrategy(_) >> Mock(AttributeMatchingStrategy) {
-                execute(_) >> {
+        def attributeSchemaWithCompatibility = new DefaultAttributesSchema(new ComponentAttributeMatcher())
+        attributeSchemaWithCompatibility.attribute(Attribute.of("key", String), {
+            it.ordered(Mock(Comparator) {
+                compare(_, _) >> {
                     throw new RuntimeException('oh noes!')
                 }
-                toString() >> 'DummyMatcher'
-            }
-            hasAttribute(_) >> true
-        }
+            })
+        })
 
         given:
         toComponent.getConfiguration("default") >> defaultConfig
@@ -546,8 +512,8 @@ class LocalComponentDependencyMetadataTest extends Specification {
         dep.selectConfigurations(fromComponent, fromConfig, toComponent, attributeSchemaWithCompatibility)*.name as Set == [expected] as Set
 
         then:
-        def e = thrown(Exception)
-        e.cause.message.startsWith("Unexpected error thrown when trying to match attribute values with DummyMatcher")
+        def e = thrown(GradleException)
+        e.message.startsWith("Unexpected error thrown when trying to match attribute values with org.gradle.api.internal.attributes.DefaultAttributeMatchingStrategy")
     }
 
     def configuration(String name, String... parents) {

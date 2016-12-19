@@ -18,7 +18,7 @@ package org.gradle.api.internal.artifacts.transform;
 
 import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.attributes.AttributesSchema;
-import org.gradle.internal.component.model.ComponentAttributeMatcher;
+import org.gradle.api.internal.attributes.AttributesSchemaInternal;
 
 class ArtifactAttributeMatcher {
 
@@ -32,7 +32,7 @@ class ArtifactAttributeMatcher {
         if (artifact.getAttributes().isEmpty() && target.getAttributes().isEmpty()) {
             return true;
         }
-        return ComponentAttributeMatcher.isMatching(attributesSchema, artifact, target);
+        return ((AttributesSchemaInternal) attributesSchema).isMatching(artifact, target);
     }
 
 }

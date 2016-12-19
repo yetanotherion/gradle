@@ -25,4 +25,6 @@ import java.util.List;
 public interface AttributesSchemaInternal extends AttributesSchema {
 
     List<? extends HasAttributes> getMatches(AttributesSchema producerAttributeSchema, List<HasAttributes> candidates, AttributeContainer consumer);
+
+    boolean isMatching(AttributeContainer candidate, AttributeContainer target);
 }

@@ -157,8 +157,8 @@ public class DefaultAttributeContainer implements AttributeContainerInternal {
             return false;
         }
         DefaultAttributeContainer that = (DefaultAttributeContainer) o;
-        return Objects.equal(parent, that.parent) &&
-            Objects.equal(attributes, that.attributes);
+        return Objects.equal(parent, that.parent)
+            && Objects.equal(attributes, that.attributes);
     }
 
     @Override

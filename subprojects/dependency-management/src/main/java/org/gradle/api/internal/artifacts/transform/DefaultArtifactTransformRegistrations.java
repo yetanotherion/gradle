@@ -42,7 +42,7 @@ public class DefaultArtifactTransformRegistrations implements ArtifactTransformR
     private final ArtifactAttributeMatcher attributeMatcher;
     private final HashMap<AttributeContainer, AttributeSpecificCache> attributeSpecificCache = Maps.newHashMap();
 
-    private static final Transformer<List<File>,File> NO_TRANSFORM = new Transformer<List<File>, File>() {
+    private static final Transformer<List<File>, File> NO_TRANSFORM = new Transformer<List<File>, File>() {
         @Override
         public List<File> transform(File file) {
             return null;
@@ -126,7 +126,7 @@ public class DefaultArtifactTransformRegistrations implements ArtifactTransformR
         getCache(target).transformedFiles.put(file, transformResults);
     }
 
-    public final class ArtifactTransformRegistration {
+    private final class ArtifactTransformRegistration {
         public final AttributeContainer from;
         public final AttributeContainer to;
         public final Class<? extends ArtifactTransform> type;
@@ -188,7 +188,7 @@ public class DefaultArtifactTransformRegistrations implements ArtifactTransformR
         }
     }
 
-    public static class AttributeSpecificCache {
+    private static class AttributeSpecificCache {
         private final Map<AttributeContainer, Boolean> exactMatches = Maps.newHashMap();
         private final Map<AttributeContainer, Transformer<List<File>, File>> transforms = Maps.newHashMap();
         private final Map<File, List<File>> transformedFiles = Maps.newHashMap();
