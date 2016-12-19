@@ -159,4 +159,25 @@ class DefaultAttributesSchemaTest extends Specification {
         0 * candidateDetails._
 
     }
+
+    def "Match with similar input is only performed once"() {
+        given:
+        def matcher = Mock(ComponentAttributeMatcher)
+        schema = new DefaultAttributesSchema(matcher)
+
+        def a1 = Attribute.of("a1", String)
+        def a2 = Attribute.of("a2", Integer)
+        def candidates = [
+            new DefaultAttributeContainer().attribute(a1, "A").attribute(a2, 1),
+            new DefaultAttributeContainer().attribute(a1, "B").attribute(a2, 1)]
+        def consumer = new DefaultAttributeContainer().attribute(a1, "A").attribute(a2, 1)
+
+        when:
+        schema.getMatches(schema, candidates, consumer)
+        schema.getMatches(schema, candidates, consumer)
+
+        then:
+        1 * matcher.match(schema, schema, candidates, consumer) >> []
+        0 * matcher._
+    }
 }
