@@ -2,23 +2,15 @@
 
 As a user, I want to be able to control the amount of information I see from my Gradle build and where I get that information from.
 
-## Encountered User Concerns
-
-* Many User/Customer/Training attendees asked for more fine grained logging functionality like known from well known logging frameworks like log4j / logback, etc.
-* It's hard to trace specific logging messages as we currently just support global log levels and not fine grained (e.g. package scoped) log levels
-* Adding custom logging appender is not supported
-
-### Related Issues in the Gradle issue tracker
-
-- [gradle/gradle#1010](https://github.com/gradle/gradle/issues/1010)
-- [gradle/gradle#1005](https://github.com/gradle/gradle/issues/1005)
-
 ## Use Cases
 
 * As a Gradle User, I want to configure the gradle different log levels for core and my plugin code
 * As a Gradle User, I want to redirect specific log messages (e.g. to a file)
 * My Gradle Build should be integrated with the logging infrastructure I want to configure
 * As a Gradle User, I want to set different logging configurations for different environments (e.g. on CI Server, on Dev box)  
+
+## Story: Allow configuration of custom logback appender
+Could read appender JARs from `$GRADLE_HOME/logging/libs`
 
 ## Story: Allow user to specify logging framework and provide configuration for that framework
 Add `logging {}` DSL allowing users to specify a logging framework. 
