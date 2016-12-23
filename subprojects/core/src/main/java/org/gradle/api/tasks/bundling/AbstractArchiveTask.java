@@ -42,8 +42,8 @@ public abstract class AbstractArchiveTask extends AbstractCopyTask {
     private String version;
     private String extension;
     private String classifier = "";
-    private boolean preserveFileTimestamps = true;
-    private boolean sortedFileOrder;
+    private boolean preserveFileTimestamps;
+    private boolean sortedFileOrder = true;
 
     /**
      * Returns the archive name. If the name has not been explicitly set, the pattern for the name is:
