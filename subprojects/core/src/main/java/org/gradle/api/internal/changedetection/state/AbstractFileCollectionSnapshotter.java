@@ -35,6 +35,8 @@ import org.gradle.api.internal.hash.FileHasher;
 import org.gradle.internal.nativeintegration.filesystem.FileMetadataSnapshot;
 import org.gradle.internal.nativeintegration.filesystem.FileSystem;
 import org.gradle.internal.serialize.SerializerRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.List;
@@ -47,11 +49,13 @@ import static org.gradle.internal.nativeintegration.filesystem.FileType.*;
  * Responsible for calculating a {@link FileCollectionSnapshot} for a particular {@link FileCollection}.
  */
 public abstract class AbstractFileCollectionSnapshotter implements FileCollectionSnapshotter {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractFileCollectionSnapshotter.class);
     private final FileHasher hasher;
     private final StringInterner stringInterner;
     private final FileSystem fileSystem;
     private final DirectoryFileTreeFactory directoryFileTreeFactory;
     private final FileSystemMirror fileSystemMirror;
+    private final boolean log = System.getProperty("org.gradle.internal.snapshots.log", "false").equalsIgnoreCase("true");
 
     public AbstractFileCollectionSnapshotter(FileHasher hasher, StringInterner stringInterner, FileSystem fileSystem, DirectoryFileTreeFactory directoryFileTreeFactory, FileSystemMirror fileSystemMirror) {
         this.hasher = hasher;
@@ -200,11 +204,17 @@ public abstract class AbstractFileCollectionSnapshotter implements FileCollectio
 
         @Override
         public void visitDir(FileVisitDetails dirDetails) {
+            if (log) {
+                LOGGER.info("Visiting directory {}", dirDetails.getFile());
+            }
             fileTreeElements.add(new DefaultFileDetails(getPath(dirDetails.getFile()), dirDetails.getRelativePath(), Directory, false, dirSnapshot()));
         }
 
         @Override
         public void visitFile(FileVisitDetails fileDetails) {
+            if (log) {
+                LOGGER.info("Visiting file {}", fileDetails.getFile());
+            }
             fileTreeElements.add(new DefaultFileDetails(getPath(fileDetails.getFile()), fileDetails.getRelativePath(), RegularFile, false, fileSnapshot(fileDetails)));
         }
     }
