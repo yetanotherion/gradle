@@ -190,6 +190,7 @@ task work {
         assert copy.directory
         assert inDir.readLink() == copy.absolutePath
         assert inDir.canonicalFile == copy
+        executer.requireGradleDistribution()
         executer.withArguments("-Dorg.gradle.internal.snapshots.log=true", "-i")
 
         run("work")
@@ -262,6 +263,7 @@ task work {
         assert outDir.readLink() == copy.absolutePath
         assert copy.directory
         assert outDir.canonicalFile == copy
+        executer.requireGradleDistribution()
         executer.withArguments("-Dorg.gradle.internal.snapshots.log=true", "-i")
 
         run("work")
