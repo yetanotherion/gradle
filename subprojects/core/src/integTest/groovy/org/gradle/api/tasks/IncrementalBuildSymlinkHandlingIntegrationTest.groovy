@@ -27,6 +27,11 @@ import java.nio.file.StandardCopyOption
 class IncrementalBuildSymlinkHandlingIntegrationTest extends AbstractIntegrationSpec {
     def setup() {
         buildFile << """
+// This is a workaround to bust the JVM's file canonicalization cache
+def f = file("delete-me")
+f.createNewFile()
+f.delete() // invalidates cache
+
 task work {
     inputs.file('in.txt')
     inputs.dir('in-dir')
@@ -190,7 +195,6 @@ task work {
         assert copy.directory
         assert inDir.readLink() == copy.absolutePath
         assert inDir.canonicalFile == copy
-        executer.requireGradleDistribution()
         executer.withArguments("-Dorg.gradle.internal.snapshots.log=true", "-i")
 
         run("work")
@@ -263,7 +267,6 @@ task work {
         assert outDir.readLink() == copy.absolutePath
         assert copy.directory
         assert outDir.canonicalFile == copy
-        executer.requireGradleDistribution()
         executer.withArguments("-Dorg.gradle.internal.snapshots.log=true", "-i")
 
         run("work")
