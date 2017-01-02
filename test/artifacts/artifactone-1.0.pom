@@ -1,0 +1,25 @@
+<project>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.criteo.dummy</groupId>
+    <artifactId>artifactone</artifactId>
+    <version>1.0</version>
+
+    <parent>
+        <groupId>com.criteo.dummy</groupId>
+        <artifactId>parent</artifactId>
+        <version>1.0</version>
+        <relativePath>../parent/pom.xml</relativePath>
+    </parent>
+
+    <properties>
+        <artifacttwo.version>2.0</artifacttwo.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.criteo.dummy</groupId>
+            <artifactId>artifacttwo</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>

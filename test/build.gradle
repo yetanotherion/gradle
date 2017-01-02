@@ -1,0 +1,15 @@
+repositories {
+    maven {
+        url "https://criteo.bintray.com/integration-tests"
+    }
+}
+configurations { compile }
+dependencies {
+    compile 'com.criteo.dummy:artifactone:1.0'
+}
+
+task showBroken {
+    doLast {
+        println configurations.compile.files
+    }
+}
